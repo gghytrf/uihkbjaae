@@ -17,6 +17,12 @@ permissions:
   pages: write
   id-token: write
 
+# Node.js 20 廃止対応：まだ Node24 版が出ていない公式アクション
+# （configure-pages / deploy-pages 等）も Node24 で動かし、警告を解消する。
+# 2026/6/16 のデフォルト切替後も当面はこの指定で安定動作する。
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 concurrency:
   group: "pages"
   cancel-in-progress: false
@@ -28,7 +34,7 @@ jobs:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     steps:
       - name: リポジトリを取得
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -78,7 +84,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: 最新（バージョン更新後）を取得
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.ref_name }}
 
@@ -86,7 +92,7 @@ jobs:
         uses: actions/configure-pages@v5
 
       - name: アーティファクトをアップロード
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: '.'
 
