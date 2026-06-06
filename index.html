@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>東洋医学 学習スイート</title>
+<meta name="description" content="国試学習・経穴検索・弁証支援・暗記アプリをまとめた東洋医学 学習スイート">
+<meta name="theme-color" content="#b03a2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="学習スイート">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<link rel="icon" type="image/png" href="./icons/icon-192.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
+  :root{
+    --ink:#1a1814; --paper:#f4efe4; --paper2:#ece4d3;
+    --cinnabar:#b03a2e; --cinnabar-d:#8a2c22;
+    --indigo:#2c4a52; --gold:#a9824a; --line:#d8cdb6;
+    --shadow:rgba(40,30,15,.18);
+    /* 各アプリのテーマ色 */
+    --c-kokushi:#2c5f7c; --c-search:#d9820a; --c-bensho:#7a5c3e; --c-anki:#1f3a4d;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:'Zen Kaku Gothic New',sans-serif;background:var(--paper);color:var(--ink);
+    background-image:
+      radial-gradient(circle at 12% 14%, rgba(176,58,46,.05), transparent 42%),
+      radial-gradient(circle at 88% 86%, rgba(44,74,82,.06), transparent 46%),
+      repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(168,130,74,.03) 28px, rgba(168,130,74,.03) 29px);
+    overflow-x:hidden;
+  }
+
+  /* ===== ホーム ===== */
+  #home{min-height:100%;display:flex;flex-direction:column;
+    padding:max(26px,env(safe-area-inset-top)) 18px 40px;max-width:760px;margin:0 auto;}
+  .brand{display:flex;align-items:center;gap:13px;margin:8px 2px 4px}
+  .brand .seal{font-family:'Shippori Mincho',serif;font-weight:800;background:var(--cinnabar);color:var(--paper);
+    width:48px;height:48px;display:grid;place-items:center;border-radius:8px;font-size:25px;flex:none;
+    box-shadow:2.5px 2.5px 0 var(--cinnabar-d);transform:rotate(-2deg);}
+  .brand h1{font-family:'Shippori Mincho',serif;font-size:25px;font-weight:800;letter-spacing:.04em;line-height:1.2}
+  .brand h1 small{display:block;font-size:10px;font-weight:500;color:var(--gold);letter-spacing:.34em;
+    font-family:'Zen Kaku Gothic New';margin-top:3px}
+  .lead{font-size:13.5px;color:#6a5e48;margin:14px 2px 22px;letter-spacing:.02em}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:520px){ .grid{grid-template-columns:1fr} }
+
+  .card{position:relative;border:1px solid var(--line);border-radius:16px;overflow:hidden;
+    background:#fff;cursor:pointer;text-align:left;color:inherit;font:inherit;
+    box-shadow:0 2px 0 var(--shadow);transition:transform .18s ease, box-shadow .18s ease;
+    display:flex;flex-direction:column;min-height:150px;padding:0;animation:rise .5s both;}
+  .card:nth-child(1){animation-delay:.05s}
+  .card:nth-child(2){animation-delay:.12s}
+  .card:nth-child(3){animation-delay:.19s}
+  .card:nth-child(4){animation-delay:.26s}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .card:hover{transform:translateY(-3px);box-shadow:0 8px 22px var(--shadow)}
+  .card:active{transform:translateY(0)}
+  .card .top{padding:17px 18px 14px;color:#fff;position:relative;overflow:hidden}
+  .card .top::after{content:"";position:absolute;right:-22px;top:-22px;width:90px;height:90px;
+    border-radius:50%;background:rgba(255,255,255,.12)}
+  .card .glyph{font-family:'Shippori Mincho',serif;font-weight:800;font-size:30px;line-height:1;
+    display:block;margin-bottom:9px;position:relative}
+  .card h2{font-family:'Shippori Mincho',serif;font-size:18px;font-weight:800;letter-spacing:.03em;position:relative}
+  .card .en{font-size:8.5px;letter-spacing:.22em;opacity:.85;margin-top:3px;position:relative}
+  .card .desc{padding:13px 18px 16px;font-size:12px;color:#5f5645;line-height:1.65;flex:1}
+  .card .go{padding:0 18px 15px;font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.08em;
+    display:flex;align-items:center;gap:5px}
+  .card .go .arr{transition:transform .2s}
+  .card:hover .go .arr{transform:translateX(4px)}
+
+  .c-kokushi .top{background:linear-gradient(135deg,var(--c-kokushi),#1d4459)}
+  .c-search  .top{background:linear-gradient(135deg,var(--c-search),#b5670a)}
+  .c-bensho  .top{background:linear-gradient(135deg,var(--c-bensho),#5c4329)}
+  .c-anki    .top{background:linear-gradient(135deg,var(--c-anki),#142838)}
+
+  .home-foot{margin-top:26px;display:flex;align-items:center;justify-content:space-between;
+    flex-wrap:wrap;gap:10px;padding-top:16px;border-top:1px dashed var(--line)}
+  .ver{font-size:11px;color:#8a7d63;letter-spacing:.04em}
+  .btn-upd{border:1px solid var(--line);background:#fff;color:var(--indigo);font:inherit;font-size:12px;
+    font-weight:700;padding:8px 14px;border-radius:9px;cursor:pointer;letter-spacing:.04em;
+    display:inline-flex;align-items:center;gap:6px;transition:.18s}
+  .btn-upd:hover{background:var(--paper2)}
+  .btn-upd.has-update{border-color:var(--cinnabar);color:var(--cinnabar);animation:blink 1.1s infinite}
+  @keyframes blink{50%{opacity:.45}}
+  .btn-upd.checking{opacity:.6;pointer-events:none}
+  .credit{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);text-align:center;
+    font-size:11px;color:#8a7d63;line-height:1.7;letter-spacing:.02em}
+  .credit-name{font-weight:500}
+  .credit-mail a{color:var(--indigo);text-decoration:none}
+  .credit-mail a:hover{text-decoration:underline}
+
+  /* ===== アプリ表示（iframe）===== */
+  #viewer{position:fixed;inset:0;z-index:100;display:none;flex-direction:column;background:var(--paper)}
+  #viewer.show{display:flex}
+  .appbar{flex:none;display:flex;align-items:center;gap:10px;
+    padding:max(8px,env(safe-area-inset-top)) 12px 8px;
+    background:var(--bar,#2c4a52);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.18);z-index:2}
+  .appbar .back{border:none;background:rgba(255,255,255,.16);color:#fff;font:inherit;font-size:13px;
+    font-weight:700;padding:8px 13px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+  .appbar .back:hover{background:rgba(255,255,255,.27)}
+  .appbar .title{font-family:'Shippori Mincho',serif;font-weight:700;font-size:15px;letter-spacing:.04em;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #frameWrap{flex:1;position:relative;background:#fff}
+  #appFrame{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
+  .floader{position:absolute;inset:0;display:grid;place-items:center;background:var(--paper);z-index:1}
+  .floader .sp{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--cinnabar);
+    border-radius:50%;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* 更新トースト */
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:var(--paper);padding:12px 20px;border-radius:11px;font-size:13px;
+    box-shadow:0 6px 20px rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:.3s;z-index:300;max-width:88vw;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* ===== オフライン48時間ロック画面 ===== */
+  #lock{position:fixed;inset:0;z-index:500;display:none;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:32px 26px;background:var(--paper);
+    background-image:
+      radial-gradient(circle at 50% 28%, rgba(176,58,46,.07), transparent 55%),
+      repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(168,130,74,.03) 28px, rgba(168,130,74,.03) 29px);}
+  #lock.show{display:flex}
+  #lock .seal{font-family:'Shippori Mincho',serif;font-weight:800;background:var(--cinnabar);color:var(--paper);
+    width:62px;height:62px;display:grid;place-items:center;border-radius:10px;font-size:32px;
+    box-shadow:3px 3px 0 var(--cinnabar-d);transform:rotate(-2deg);margin-bottom:24px}
+  #lock h2{font-family:'Shippori Mincho',serif;font-size:21px;font-weight:800;letter-spacing:.04em;margin-bottom:14px;line-height:1.4}
+  #lock p{font-size:13.5px;color:#5f5645;line-height:1.85;max-width:30em;margin-bottom:9px}
+  #lock .meta{font-size:12px;color:#8a7d63;margin-top:6px;letter-spacing:.03em}
+  #lock .status{margin-top:22px;display:inline-flex;align-items:center;gap:9px;font-size:13px;font-weight:700;
+    color:var(--cinnabar);border:1px solid var(--line);background:#fff;padding:10px 18px;border-radius:10px}
+  #lock .dot{width:9px;height:9px;border-radius:50%;background:var(--cinnabar);animation:pulse 1.3s infinite}
+  @keyframes pulse{50%{opacity:.3}}
+  #lock .retry{margin-top:18px;border:1px solid var(--line);background:#fff;color:var(--indigo);font:inherit;
+    font-size:13px;font-weight:700;padding:10px 20px;border-radius:10px;cursor:pointer;letter-spacing:.04em}
+  #lock .retry:hover{background:var(--paper2)}
+</style>
+</head>
+<body>
+
+<main id="home">
+  <div class="brand">
+    <div class="seal">医</div>
+    <h1>東洋医学 学習スイート<small>TOYO IGAKU — STUDY SUITE</small></h1>
+  </div>
+  <p class="lead">学習したいアプリを選んでください。各アプリの学習データ・カルテはこれまで通り端末内に保存され、引き続き使えます。</p>
+
+  <div class="grid">
+    <button class="card c-kokushi" onclick="openApp('kokushi')">
+      <div class="top"><span class="glyph">国</span><h2>国試学習</h2><div class="en">KOKUSHI EXAM</div></div>
+      <div class="desc">あマ指・はり師きゅう師 国家試験の過去問演習。科目・年度別に解いて履歴を記録。</div>
+      <div class="go">ひらく <span class="arr">→</span></div>
+    </button>
+
+    <button class="card c-search" onclick="openApp('search')">
+      <div class="top"><span class="glyph">探</span><h2>経穴検索</h2><div class="en">POINT SEARCH</div></div>
+      <div class="desc">主治症（症状）から治療穴を検索。全361経穴×七出典の主治症データを横断。</div>
+      <div class="go">ひらく <span class="arr">→</span></div>
+    </button>
+
+    <button class="card c-bensho" onclick="openApp('bensho')">
+      <div class="top"><span class="glyph">弁</span><h2>弁証支援</h2><div class="en">PATTERN ID</div></div>
+      <div class="desc">問診から弁証鑑別・治療穴・徒手検査を提示し、カルテを管理する臨床補助ツール。</div>
+      <div class="go">ひらく <span class="arr">→</span></div>
+    </button>
+
+    <button class="card c-anki" onclick="openApp('anki')">
+      <div class="top"><span class="glyph">暗</span><h2>暗記アプリ</h2><div class="en">MEMORIZE</div></div>
+      <div class="desc">経穴・五行色体表・脈診・脳神経・略語・骨度法などをタップ式カードで暗記。</div>
+      <div class="go">ひらく <span class="arr">→</span></div>
+    </button>
+  </div>
+
+  <div class="home-foot">
+    <span class="ver" id="verLabel">バージョン: 読み込み中…</span>
+  </div>
+
+  <div class="credit">
+    <div class="credit-name">制作者：大阪行岡医療専門学校長柄校　鍼灸科　75期生　藤本</div>
+    <div class="credit-mail">お問い合わせ：<a id="creditMail" href="mailto:__EMAIL_1__">__EMAIL_1__</a></div>
+  </div>
+</main>
+
+<!--
+  ===== 制作者連絡先（非公開・ソース内のみ）=====
+  表示用とは別の連絡先。後で実アドレスに置換してください。
+  contact(hidden): __EMAIL_2__
+-->
+<script>
+  /* 非表示の連絡先（画面には出さない）。後で __EMAIL_2__ を実アドレスに置換 */
+  window.__CONTACT_HIDDEN__ = "__EMAIL_2__";
+</script>
+
+<section id="viewer" aria-hidden="true">
+  <div class="appbar" id="appbar">
+    <button class="back" onclick="closeApp()">‹ ホーム</button>
+    <span class="title" id="appTitle"></span>
+  </div>
+  <div id="frameWrap">
+    <div class="floader" id="floader"><div class="sp"></div></div>
+    <iframe id="appFrame" title="アプリ" allow="clipboard-read; clipboard-write"></iframe>
+  </div>
+</section>
+
+<div id="toast"></div>
+
+<section id="lock" aria-hidden="true" role="alertdialog" aria-modal="true">
+  <div class="seal">医</div>
+  <h2 id="lockTitle">インターネット接続が必要です</h2>
+  <p id="lockBody">このアプリはオンライン専用です。コンテンツを表示するにはインターネット接続が必要です。接続を確認して、再読み込みしてください。</p>
+  <div class="meta" id="lockMeta"></div>
+  <div class="status"><span class="dot"></span><span id="lockStatus">接続を待っています…</span></div>
+  <button class="retry" onclick="reloadNow()">🔄 再読み込み</button>
+</section>
+
+<script>
+/* ============================================================
+   東洋医学 学習スイート — 統合ホーム
+   ・4アプリを iframe で開く（ハッシュルーティング）
+   ・キャッシュ／バージョンは親 Service Worker と version.json に一元化
+   ============================================================ */
+const APPS = {
+  kokushi:{ title:'国試学習',  url:'apps/kokushi/index.html', bar:'#2c5f7c' },
+  search: { title:'経穴検索',  url:'apps/search/index.html',  bar:'#b5670a' },
+  bensho: { title:'弁証支援',  url:'apps/bensho/index.html',  bar:'#7a5c3e' },
+  anki:   { title:'暗記アプリ',  url:'apps/anki/index.html',    bar:'#1f3a4d' },
+};
+
+const viewer  = document.getElementById('viewer');
+const frame   = document.getElementById('appFrame');
+const floader = document.getElementById('floader');
+const appbar  = document.getElementById('appbar');
+const appTitle= document.getElementById('appTitle');
+let currentApp = null;
+
+function openApp(key, fromHash){
+  if(typeof blocked !== 'undefined' && blocked){ return; } // 再読み込み画面表示中は開かない
+  const app = APPS[key]; if(!app) return;
+  currentApp = key;
+  appTitle.textContent = app.title;
+  appbar.style.setProperty('--bar', app.bar);
+  document.querySelector('meta[name=theme-color]').setAttribute('content', app.bar);
+  floader.style.display = 'grid';
+  frame.onload = ()=>{ floader.style.display='none'; };
+  // 既に同じ src なら再読込しない
+  const want = new URL(app.url, location.href).href;
+  if(frame.src !== want) frame.src = app.url; else floader.style.display='none';
+  viewer.classList.add('show');
+  viewer.setAttribute('aria-hidden','false');
+  if(!fromHash && location.hash !== '#'+key) location.hash = key;
+}
+
+function closeApp(){
+  viewer.classList.remove('show');
+  viewer.setAttribute('aria-hidden','true');
+  document.querySelector('meta[name=theme-color]').setAttribute('content', '#b03a2e');
+  currentApp = null;
+  if(location.hash) history.pushState('', document.title, location.pathname + location.search);
+}
+
+// ブラウザ／端末の戻る操作に対応
+window.addEventListener('hashchange', routeFromHash);
+function routeFromHash(){
+  const key = location.hash.replace('#','');
+  if(APPS[key]) openApp(key, true);
+  else closeApp();
+}
+
+// ===== オンライン専用・バージョン管理 =====
+//  方針：コンテンツは永続キャッシュしない（オフライン保存させない）。
+//  起動時／24時間無操作／バックグラウンド復帰時に version.json を確認し、
+//  変化があれば強制リロード。取得できなければ再読み込み画面を表示。
+//  状態（最後の確認時刻・最後に見たバージョン）のみ sessionStorage に保持。
+const updBtn   = document.getElementById('updBtn');
+const verLabel = document.getElementById('verLabel');
+const lockEl   = document.getElementById('lock');
+const lockMeta = document.getElementById('lockMeta');
+const lockStatus = document.getElementById('lockStatus');
+const lockTitle  = document.getElementById('lockTitle');
+const lockBody   = document.getElementById('lockBody');
+let APP_VERSION = null;
+
+// 24時間無操作で再確認
+const IDLE_MS = 24 * 60 * 60 * 1000;
+// sessionStorage キー（タブを閉じると消える＝オフライン持ち出し不可）
+const SS_VER = 'suite_seen_version';
+const SS_OK  = 'suite_last_check';
+let blocked = false;
+let lastActivity = Date.now();
+
+function ssGet(k){ try{ return sessionStorage.getItem(k); }catch(e){ return null; } }
+function ssSet(k,v){ try{ sessionStorage.setItem(k,String(v)); }catch(e){} }
+function ssClearAll(){ try{ sessionStorage.removeItem(SS_VER); sessionStorage.removeItem(SS_OK); }catch(e){} }
+
+// version.json を必ずネットから取得（キャッシュ不可）。成功＝オンライン。
+async function fetchVersion(){
+  try{
+    const res = await fetch('./version.json?ts='+Date.now(), {cache:'no-store'});
+    if(!res.ok) throw new Error('bad status');
+    const data = await res.json();
+    return data.version || null;
+  }catch(e){ return null; }
+}
+
+// 再読み込み画面（オフライン／取得失敗時）。真っ白防止。
+function showBlock(kind){
+  blocked = true;
+  if(currentApp) closeApp();
+  if(kind==='offline'){
+    lockTitle.textContent = 'インターネット接続が必要です';
+    lockBody.textContent  = 'このアプリはオンライン専用です。コンテンツを表示するにはインターネット接続が必要です。接続を確認して、再読み込みしてください。';
+  }else{
+    lockTitle.textContent = '読み込みに失敗しました';
+    lockBody.textContent  = '最新の状態を取得できませんでした。通信状況を確認して、再読み込みしてください。';
+  }
+  lockStatus.textContent = '接続を待っています…';
+  lockMeta.textContent = '';
+  lockEl.classList.add('show');
+  lockEl.setAttribute('aria-hidden','false');
+  document.body.style.overflow = 'hidden';
+}
+function hideBlock(){
+  blocked = false;
+  lockEl.classList.remove('show');
+  lockEl.setAttribute('aria-hidden','true');
+  document.body.style.overflow = '';
+}
+function reloadNow(){
+  // キャッシュバスター付きで完全リロード。
+  // URL のハッシュ（例 #kokushi）は保持されるため、リロード後は
+  // routeFromHash() が同じアプリを自動で開き直す（アプリ単位で復帰）。
+  // ※アプリ内のどの画面・入力途中の状態までは復元されない（各アプリのトップから再開）。
+  const u = new URL(location.href);
+  u.searchParams.set('_r', Date.now());
+  location.replace(u.toString());
+}
+
+// 起動時の検証：必ずオンラインで最新を確認してから表示する
+async function verifyOnStart(){
+  const latest = await fetchVersion();
+  if(!latest){
+    // オフライン／取得失敗 → sessionStorage を消して再読み込み画面
+    ssClearAll();
+    showBlock('offline');
+    return;
+  }
+  const seen = ssGet(SS_VER);
+  APP_VERSION = latest;
+  verLabel.textContent = 'バージョン: ' + latest;
+  ssSet(SS_OK, Date.now());
+  if(seen && seen !== latest){
+    // 既に何か見ていて、バージョンが変わった → 強制的に最新へ
+    ssSet(SS_VER, latest);
+    showToast('新しいバージョン（'+latest+'）に更新します…');
+    if(navigator.serviceWorker && navigator.serviceWorker.controller){
+      navigator.serviceWorker.controller.postMessage({type:'UPDATE_NOW'});
+    }else{
+      setTimeout(reloadNow, 600);
+    }
+    return;
+  }
+  ssSet(SS_VER, latest);
+  hideBlock();
+}
+
+// 無操作／復帰時の再確認：変化があれば強制更新、取れなければ再読み込み画面
+async function recheck(){
+  const latest = await fetchVersion();
+  if(!latest){ ssClearAll(); showBlock('offline'); return; }
+  ssSet(SS_OK, Date.now());
+  if(APP_VERSION && latest !== APP_VERSION){
+    showToast('新しいバージョン（'+latest+'）に更新します…');
+    ssSet(SS_VER, latest);
+    if(navigator.serviceWorker && navigator.serviceWorker.controller){
+      navigator.serviceWorker.controller.postMessage({type:'UPDATE_NOW'});
+    }else{
+      setTimeout(reloadNow, 600);
+    }
+  }else{
+    if(blocked) hideBlock();
+  }
+}
+
+// 手動「更新確認」（更新ボタンは廃止。自動確認に一本化。互換のため関数は残す）
+async function checkUpdate(){
+  if(!updBtn){ // ボタンが無い場合は確認のみ実行
+    const latest=await fetchVersion();
+    if(!latest){ ssClearAll(); showBlock('offline'); return; }
+    ssSet(SS_OK,Date.now());
+    if(APP_VERSION && latest!==APP_VERSION){ ssSet(SS_VER,latest);
+      if(navigator.serviceWorker&&navigator.serviceWorker.controller){navigator.serviceWorker.controller.postMessage({type:'UPDATE_NOW'});}
+      else{ setTimeout(reloadNow,600); } }
+    return;
+  }
+  updBtn.classList.add('checking');
+  updBtn.textContent = '確認中…';
+  const latest = await fetchVersion();
+  if(!latest){
+    updBtn.classList.remove('checking');
+    updBtn.textContent = '🔄 オフライン';
+    showToast('オフラインのため確認できませんでした。');
+    setTimeout(()=>{ updBtn.textContent='🔄 更新確認'; }, 2200);
+    ssClearAll(); showBlock('offline');
+    return;
+  }
+  if(APP_VERSION && latest !== APP_VERSION){
+    updBtn.textContent = '更新中…';
+    showToast('新しいバージョン（'+latest+'）に更新します…');
+    ssSet(SS_VER, latest);
+    if(navigator.serviceWorker && navigator.serviceWorker.controller){
+      navigator.serviceWorker.controller.postMessage({type:'UPDATE_NOW'});
+    }else{ setTimeout(reloadNow, 600); }
+  }else{
+    updBtn.classList.remove('checking');
+    updBtn.textContent = '🔄 最新です';
+    showToast('最新の状態です（'+latest+'）');
+    setTimeout(()=>{ updBtn.textContent='🔄 更新確認'; }, 2200);
+  }
+}
+
+let toastT;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'), 3200);
+}
+
+// ===== Service Worker 登録 =====
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+    navigator.serviceWorker.addEventListener('message', e=>{
+      if(e.data && e.data.type==='UPDATED'){ reloadNow(); }
+    });
+  });
+}
+
+// 無操作タイマー：24時間無操作の後の操作・復帰で再確認
+['click','keydown','touchstart','scroll','mousemove'].forEach(ev=>{
+  window.addEventListener(ev, ()=>{
+    const now=Date.now();
+    if(now - lastActivity >= IDLE_MS){ lastActivity=now; recheck(); }
+    else lastActivity=now;
+  }, {passive:true});
+});
+
+// オンライン復帰・バックグラウンド→フォアグラウンド復帰で強制確認
+window.addEventListener('online', ()=>recheck());
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) recheck(); });
+
+// 起動
+(function boot(){
+  routeFromHash();
+  verifyOnStart();
+})();
+</script>
+</body>
+</html>

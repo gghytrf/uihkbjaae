@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<script>
+/* ===== 統合アプリ用ガード（自動挿入・元コードは未変更）=====
+   iframe 内で動くとき、各アプリ独自の Service Worker 登録／キャッシュ操作／
+   バージョン確認を無効化し、キャッシュとバージョン管理を親（統合ホーム）へ
+   一元化します。localStorage（学習データ・カルテ等）はそのまま使えます。 */
+(function(){
+  try{
+    if (window.top === window.self) return; // 単体起動時は何もしない
+
+    // 1) Service Worker を無害なスタブに
+    var swStub = {
+      register:function(){ return Promise.reject(new Error('SW disabled in integrated app')); },
+      getRegistration:function(){ return Promise.resolve(undefined); },
+      getRegistrations:function(){ return Promise.resolve([]); },
+      addEventListener:function(){}, removeEventListener:function(){},
+      get controller(){ return null; },
+      ready:new Promise(function(){})
+    };
+    try{ Object.defineProperty(navigator,'serviceWorker',{get:function(){return swStub;},configurable:true}); }catch(e){}
+
+    // 2) Cache Storage を無効化（子アプリが親のキャッシュを消さないように）
+    var noop0=function(){return Promise.resolve();};
+    function neutralizeCaches(){
+      try{
+        var cacheStub={
+          open:function(){return Promise.resolve({addAll:noop0,add:noop0,put:noop0,
+            match:function(){return Promise.resolve(undefined);},delete:function(){return Promise.resolve(false);},
+            keys:function(){return Promise.resolve([]);}});},
+          keys:function(){return Promise.resolve([]);},
+          delete:function(){return Promise.resolve(false);},
+          match:function(){return Promise.resolve(undefined);},
+          has:function(){return Promise.resolve(false);}
+        };
+        try{ Object.defineProperty(window,'caches',{get:function(){return cacheStub;},configurable:true}); }
+        catch(e){
+          // defineProperty が不可なら既存オブジェクトのメソッドを直接無害化
+          if(window.caches){
+            try{ window.caches.keys=function(){return Promise.resolve([]);}; }catch(_){}
+            try{ window.caches.delete=function(){return Promise.resolve(false);}; }catch(_){}
+            try{ window.caches.open=cacheStub.open; }catch(_){}
+          }
+        }
+      }catch(e){}
+    }
+    neutralizeCaches();
+
+    // 3) アプリ独自の「更新」ボタンを隠す（親の「更新確認」に一本化）
+    var css='#refresh,footer .ver,#ver{display:none !important;}';
+    function injectCss(){ try{ var s=document.createElement('style'); s.textContent=css; (document.head||document.documentElement).appendChild(s);}catch(e){} }
+    if(document.head){ injectCss(); }
+    else { document.addEventListener('DOMContentLoaded', injectCss); }
+  }catch(e){}
+
+    // ===== コピー無効化（コンテンツ保護）=====
+    // テキスト選択・右クリック・長押しを抑止。ただし入力欄は除外（カルテ/検索/メモは操作可）。
+    var cpCss = document.createElement('style');
+    cpCss.textContent =
+      'html{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;' +
+      '-webkit-touch-callout:none;}' +
+      'input,textarea,[contenteditable="true"],[contenteditable=""]{' +
+      '-webkit-user-select:text !important;-moz-user-select:text !important;' +
+      '-ms-user-select:text !important;user-select:text !important;-webkit-touch-callout:default !important;}';
+    (document.head||document.documentElement).appendChild(cpCss);
+    var isEditable = function(t){
+      if(!t) return false;
+      var tag=(t.tagName||'').toLowerCase();
+      if(tag==='input'||tag==='textarea') return true;
+      if(t.isContentEditable) return true;
+      return false;
+    };
+    document.addEventListener('contextmenu', function(e){ if(!isEditable(e.target)) e.preventDefault(); }, {capture:true});
+    document.addEventListener('copy', function(e){ if(!isEditable(e.target)) e.preventDefault(); }, {capture:true});
+    document.addEventListener('cut', function(e){ if(!isEditable(e.target)) e.preventDefault(); }, {capture:true});
+    document.addEventListener('dragstart', function(e){ if(!isEditable(e.target)) e.preventDefault(); }, {capture:true});
+
+  })();
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#2b2320">
+<title>主治症から経穴検索</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+:root{
+  --bg:#f4efe6; --paper:#fbf8f1; --ink:#2b2320; --ink-soft:#6b5d52;
+  --line:#d9cdbb; --accent:#9a4f3a; --accent-soft:#c8896f; --gold:#b08856;
+  --tag:#efe4d2; --shadow:0 1px 3px rgba(80,60,40,.12),0 8px 24px rgba(80,60,40,.06);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:"Hiragino Mincho ProN","Yu Mincho",serif;
+  line-height:1.7;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(circle at 20% 0%,rgba(176,136,86,.05),transparent 40%);
+  min-height:100vh;
+}
+header{
+  position:sticky;top:0;z-index:20;
+  background:linear-gradient(180deg,#2b2320,#3a302a);color:#f4efe6;
+  padding:14px 18px 12px;box-shadow:0 2px 12px rgba(0,0,0,.18);
+}
+header .bar{display:flex;align-items:center;gap:10px}
+header .bar .txt{flex:1;min-width:0}
+header .ttl{font-size:1.18rem;letter-spacing:.12em;font-weight:600;display:flex;align-items:center;gap:.5em}
+.refresh{
+  flex-shrink:0;display:inline-flex;align-items:center;gap:6px;
+  font-family:inherit;font-size:.78rem;letter-spacing:.05em;
+  color:#f4efe6;background:rgba(255,255,255,.10);
+  border:1px solid rgba(232,201,140,.45);border-radius:20px;
+  padding:7px 13px;cursor:pointer;transition:background .2s;
+}
+.refresh:active{background:rgba(255,255,255,.2)}
+.refresh .ico{display:inline-block;font-size:.95rem;line-height:1}
+.refresh.spin .ico{animation:spin .8s linear infinite}
+.refresh:disabled{opacity:.6;cursor:default}
+@keyframes spin{to{transform:rotate(360deg)}}
+header .ttl .seal{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:26px;height:26px;border:1.5px solid var(--gold);border-radius:5px;
+  color:var(--gold);font-size:.8rem;letter-spacing:0;
+}
+header .sub{font-size:.7rem;color:#c9b9a5;letter-spacing:.18em;margin-top:2px}
+.wrap{max-width:760px;margin:0 auto;padding:16px 16px 90px}
+
+.search-card{
+  background:var(--paper);border:1px solid var(--line);border-radius:14px;
+  padding:16px 16px 14px;box-shadow:var(--shadow);
+}
+.lbl{font-size:.74rem;color:var(--ink-soft);letter-spacing:.1em;margin-bottom:6px}
+.inputrow{display:flex;gap:8px}
+input[type=text]{
+  flex:1;font-family:inherit;font-size:1rem;padding:11px 12px;
+  border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);
+}
+input[type=text]:focus{outline:none;border-color:var(--accent-soft);box-shadow:0 0 0 3px rgba(154,79,58,.1)}
+.btn{
+  font-family:inherit;font-size:.92rem;padding:11px 16px;border:none;border-radius:9px;
+  background:var(--accent);color:#fff;cursor:pointer;letter-spacing:.05em;white-space:nowrap;
+}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent-soft)}
+
+.terms{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px;min-height:4px}
+.term{
+  display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:#fff;
+  padding:5px 8px 5px 11px;border-radius:20px;font-size:.84rem;
+}
+.term b{font-weight:500}
+.term span{cursor:pointer;font-size:1.05rem;line-height:1;opacity:.85}
+
+.opts{margin-top:13px;border-top:1px dashed var(--line);padding-top:11px}
+.opt-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:.86rem;color:var(--ink-soft)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{
+  font-family:inherit;font-size:.82rem;padding:6px 13px;border:none;background:#fff;color:var(--ink-soft);cursor:pointer;
+}
+.seg button.on{background:var(--accent);color:#fff}
+.srcfilter{margin-top:11px}
+.srcfilter summary{font-size:.84rem;color:var(--accent);cursor:pointer;letter-spacing:.05em}
+.srcgrid{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
+.chk{font-size:.82rem;color:var(--ink-soft);display:inline-flex;align-items:center;gap:5px;
+  background:var(--tag);padding:5px 10px;border-radius:7px;cursor:pointer;border:1px solid transparent}
+.chk.on{background:#fff;border-color:var(--accent-soft);color:var(--ink)}
+
+.suggest{margin-top:14px}
+.suggest .lbl{margin-bottom:7px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{font-family:inherit;font-size:.8rem;padding:5px 11px;border:1px solid var(--line);
+  border-radius:18px;background:#fff;color:var(--ink-soft);cursor:pointer}
+.chip:active{background:var(--tag)}
+
+.summary{display:flex;align-items:baseline;justify-content:space-between;margin:22px 2px 12px}
+.summary .cnt{font-size:1.05rem;letter-spacing:.05em}
+.summary .cnt b{color:var(--accent);font-size:1.4rem;padding:0 3px}
+.summary .note{font-size:.74rem;color:var(--ink-soft)}
+
+.card{
+  background:var(--paper);border:1px solid var(--line);border-radius:13px;
+  margin-bottom:13px;box-shadow:var(--shadow);overflow:hidden;
+  animation:rise .35s ease both;
+}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.card .head{padding:13px 15px;cursor:pointer;display:flex;align-items:center;gap:12px}
+.card .head:hover{background:rgba(176,136,86,.04)}
+.pt-who{font-size:.7rem;color:#fff;background:var(--gold);padding:3px 8px;border-radius:6px;letter-spacing:.05em;font-weight:600;white-space:nowrap}
+.pt-name{font-size:1.32rem;font-weight:600;letter-spacing:.06em}
+.pt-mer{font-size:.74rem;color:var(--ink-soft);margin-left:auto;white-space:nowrap}
+.pt-badge{font-size:.7rem;color:var(--accent);border:1px solid var(--accent-soft);border-radius:20px;padding:2px 9px;white-space:nowrap}
+.card .arrow{color:var(--ink-soft);transition:transform .25s;font-size:.8rem}
+.card.open .arrow{transform:rotate(90deg)}
+.card .body{display:none;padding:0 15px 15px;border-top:1px solid var(--line)}
+.card.open .body{display:block}
+.loc{font-size:.86rem;color:var(--ink-soft);margin:11px 0 14px;padding:9px 12px;background:var(--tag);border-radius:8px}
+.loc b{color:var(--ink);font-weight:600}
+.src{margin-bottom:13px}
+.src:last-child{margin-bottom:2px}
+.src .sname{font-size:.74rem;color:var(--gold);font-weight:600;letter-spacing:.08em;margin-bottom:3px;border-left:3px solid var(--gold);padding-left:7px}
+.src .stext{font-size:.92rem;line-height:1.75}
+mark{background:#f6e3b8;color:var(--accent);padding:0 1px;border-radius:2px;font-weight:600}
+
+.empty{text-align:center;color:var(--ink-soft);padding:50px 20px;font-size:.95rem}
+.empty .big{font-size:2.4rem;margin-bottom:10px;opacity:.5}
+
+footer{text-align:center;font-size:.7rem;color:var(--ink-soft);padding:24px 16px 40px;letter-spacing:.05em}
+footer .ver{opacity:.7}
+
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);
+  background:var(--ink);color:#fff;padding:10px 18px;border-radius:24px;font-size:.85rem;
+  opacity:0;transition:.3s;z-index:50;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+#toast.show{transform:translateX(-50%);opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="txt">
+      <div class="ttl"><span class="seal">穴</span>主治症から経穴検索</div>
+      <div class="sub">SYMPTOM &nbsp;→&nbsp; ACUPOINT &nbsp;|&nbsp; 七出典より</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="search-card">
+    <div class="lbl">症状・主治症を入力（複数追加可）</div>
+    <div class="inputrow">
+      <input type="text" id="q" placeholder="例：頭痛、不眠、腰痛 …" autocomplete="off">
+      <button class="btn" id="add">追加</button>
+    </div>
+    <div class="terms" id="terms"></div>
+
+    <div class="opts">
+      <div class="opt-row">
+        <span>条件：</span>
+        <div class="seg" id="mode">
+          <button data-m="and" class="on">すべて含む (AND)</button>
+          <button data-m="or">いずれか (OR)</button>
+        </div>
+        <button class="btn ghost" id="clear" style="margin-left:auto">クリア</button>
+      </div>
+      <details class="srcfilter">
+        <summary>出典で絞り込む</summary>
+        <div class="srcgrid" id="srcgrid"></div>
+      </details>
+    </div>
+
+    <div class="suggest">
+      <div class="lbl">よく検索される症状</div>
+      <div class="chips" id="chips"></div>
+    </div>
+  </div>
+
+  <div class="summary" id="summary" style="display:none">
+    <div class="cnt">該当 <b id="cnt">0</b> 穴</div>
+    <div class="note" id="note"></div>
+  </div>
+
+  <div id="results"></div>
+</div>
+
+<footer>
+  鍼灸経穴データベース ／ 全361経穴・七出典<br>
+  <span class="ver" id="ver">データはお使いの端末内に保存されます</span>
+</footer>
+
+<div id="toast"></div>
+
+<script>
+const SOURCES=["翁鍼灸治療院","駒井一雄","柳谷素霊","岡部素道","代田文誌","深谷伊三郎","首藤傳明"];
+const POPULAR=["頭痛","腰痛","不眠","便秘","下痢","めまい","肩こり","咳嗽","喘息","胃痛","坐骨神経痛","耳鳴り","三叉神経痛","婦人病","リウマチ"];
+let DATA=[], terms=[], mode="and", srcOn=new Set(SOURCES);
+
+const $=s=>document.querySelector(s);
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),1800);}
+
+// ---- localStorage（ブラウザ保管）----
+function saveState(){try{localStorage.setItem("acu_state",JSON.stringify({terms,mode,src:[...srcOn]}));}catch(e){}}
+function loadState(){try{const s=JSON.parse(localStorage.getItem("acu_state")||"null");if(s){terms=s.terms||[];mode=s.mode||"and";if(s.src&&s.src.length)srcOn=new Set(s.src);}}catch(e){}}
+
+// ---- データ取得（ネットワーク優先：差し替えれば自動反映 / オフライン時は保存分）----
+// force=true: キャッシュを完全に迂回して最新を取得し、保存内容を上書き
+async function loadData(force){
+  try{
+    const url = force ? ("acupoints.json?t="+Date.now()) : "acupoints.json";
+    const r=await fetch(url,{cache:"no-store"});
+    if(!r.ok)throw 0;
+    DATA=await r.json();
+    const lm=r.headers.get("last-modified");
+    const stamp=lm?new Date(lm):new Date();
+    try{
+      localStorage.setItem("acu_data",JSON.stringify(DATA));
+      localStorage.setItem("acu_data_time",stamp.toISOString());
+    }catch(e){}
+    // Service Worker のデータキャッシュも上書き（次回オフライン用）
+    if(force && "caches" in window){
+      try{
+        const c=await caches.open("acu-data");
+        await c.put("acupoints.json", new Response(JSON.stringify(DATA),
+          {headers:{"Content-Type":"application/json","last-modified":lm||new Date().toUTCString()}}));
+      }catch(e){}
+    }
+    showVer(stamp,false);
+    return true;
+  }catch(e){
+    const cached=localStorage.getItem("acu_data");
+    if(cached){
+      DATA=JSON.parse(cached);
+      const t=localStorage.getItem("acu_data_time");
+      showVer(t?new Date(t):null,true);
+      if(!force) toast("オフライン：保存データで表示中");
+    }else{
+      $("#results").innerHTML='<div class="empty"><div class="big">⚠</div>データを読み込めませんでした。<br>オンラインで一度開いてください。</div>';
+    }
+    return false;
+  }
+}
+function showVer(d,offline){
+  const el=$("#ver"); if(!el) return;
+  el.textContent=`データはお使いの端末内に保存されます${offline?"（オフライン）":""}`;
+}
+
+function renderTerms(){
+  $("#terms").innerHTML=terms.map((t,i)=>
+    `<span class="term"><b>${esc(t)}</b><span data-i="${i}">×</span></span>`).join("");
+  $("#terms").querySelectorAll("span[data-i]").forEach(e=>
+    e.onclick=()=>{terms.splice(+e.dataset.i,1);renderTerms();run();saveState();});
+}
+function renderSrc(){
+  $("#srcgrid").innerHTML=SOURCES.map(s=>
+    `<span class="chk ${srcOn.has(s)?"on":""}" data-s="${s}">${srcOn.has(s)?"✓ ":""}${s}</span>`).join("");
+  $("#srcgrid").querySelectorAll(".chk").forEach(e=>e.onclick=()=>{
+    const s=e.dataset.s; if(srcOn.has(s)){if(srcOn.size>1)srcOn.delete(s);}else srcOn.add(s);
+    renderSrc();run();saveState();
+  });
+}
+function renderChips(){
+  $("#chips").innerHTML=POPULAR.map(p=>`<button class="chip">${p}</button>`).join("");
+  $("#chips").querySelectorAll(".chip").forEach(e=>e.onclick=()=>addTerm(e.textContent));
+}
+function addTerm(t){
+  t=(t||"").trim(); if(!t)return;
+  if(terms.includes(t)){toast("既に追加済みです");return;}
+  terms.push(t); $("#q").value=""; renderTerms(); run(); saveState();
+}
+function esc(s){return s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+function hl(text,kws){let h=esc(text);kws.forEach(k=>{if(!k)return;const re=new RegExp(k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"g");h=h.replace(re,m=>`<mark>${m}</mark>`);});return h;}
+
+function run(){
+  const sum=$("#summary"),res=$("#results");
+  if(!terms.length){sum.style.display="none";res.innerHTML="";return;}
+  const matches=[];
+  for(const p of DATA){
+    const active=Object.entries(p.sources).filter(([s])=>srcOn.has(s));
+    if(!active.length)continue;
+    const blob=active.map(([,v])=>v).join("　");
+    const hit=terms.filter(t=>blob.includes(t));
+    const ok = mode==="and" ? hit.length===terms.length : hit.length>0;
+    if(ok)matches.push({p,hit:hit.length,active});
+  }
+  matches.sort((a,b)=>b.hit-a.hit);
+  sum.style.display="flex";
+  $("#cnt").textContent=matches.length;
+  $("#note").textContent=`${mode==="and"?"すべて含む":"いずれか含む"}／${srcOn.size===7?"全出典":srcOn.size+"出典"}`;
+  if(!matches.length){res.innerHTML='<div class="empty"><div class="big">該</div>該当する経穴が見つかりませんでした</div>';return;}
+  res.innerHTML=matches.map(({p,hit,active})=>{
+    const body=active.map(([s,v])=>
+      `<div class="src"><div class="sname">${s}</div><div class="stext">${hl(v,terms)}</div></div>`).join("");
+    const badge=(mode==="or"&&terms.length>1)?`<span class="pt-badge">${hit}/${terms.length}</span>`:"";
+    return `<div class="card"><div class="head">
+        <span class="pt-who">${esc(p.who)}</span>
+        <span class="pt-name">${esc(p.name)}</span>
+        ${badge}<span class="pt-mer">${esc(p.meridian)}</span>
+        <span class="arrow">▶</span>
+      </div>
+      <div class="body">
+        <div class="loc"><b>取穴部位</b>　${esc(p.location)}</div>
+        ${body}
+      </div></div>`;
+  }).join("");
+  res.querySelectorAll(".card .head").forEach(h=>h.onclick=()=>h.parentElement.classList.toggle("open"));
+}
+
+// mode buttons
+$("#mode").querySelectorAll("button").forEach(b=>b.onclick=()=>{
+  mode=b.dataset.m;$("#mode").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));run();saveState();
+});
+$("#add").onclick=()=>addTerm($("#q").value);
+$("#q").addEventListener("keydown",e=>{if(e.key==="Enter")addTerm($("#q").value);});
+$("#clear").onclick=()=>{terms=[];renderTerms();run();saveState();};
+
+// 更新ボタン：キャッシュを迂回して最新データを取得・上書き
+const _refreshBtn=$("#refresh");
+if(_refreshBtn) _refreshBtn.onclick=async()=>{
+  const btn=$("#refresh");
+  if(btn.disabled)return;
+  btn.disabled=true;btn.classList.add("spin");
+  const ok=await loadData(true);
+  run();
+  btn.classList.remove("spin");btn.disabled=false;
+  toast(ok?"最新データに更新しました":"更新できません（オフライン）");
+};
+
+(async function(){
+  loadState();
+  renderChips();renderSrc();renderTerms();
+  $("#mode").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x.dataset.m===mode));
+  await loadData();
+  run();
+})();
+
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>
