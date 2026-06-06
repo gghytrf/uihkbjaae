@@ -2054,12 +2054,18 @@ async function reprintPaperFromSession() {
   const session = paperState.session;
   if (!session) { alert('セッションが見つかりません'); return; }
   try {
+    // 問題本体の参照元：通常は state.questions（IndexedDB由来）。
+    // 念のため BUNDLED_QUESTIONS（ネット取得直後）もフォールバックに使う。
+    const pool = (state.questions && state.questions.length) ? state.questions
+               : (BUNDLED_QUESTIONS && BUNDLED_QUESTIONS.length ? BUNDLED_QUESTIONS : []);
+    const byId = {};
+    pool.forEach(q => { byId[q.id] = q; });
     // セッションの items から、問題本体を ID で引き当てて復元
     const questions = [];
     const choiceOrders = {};
     let missing = 0;
     session.items.forEach((it, idx) => {
-      const q = BUNDLED_QUESTIONS.find(x => x.id === it.questionId);
+      const q = byId[it.questionId];
       if (!q) { missing++; return; }
       questions.push(q);
       choiceOrders[questions.length - 1] = {
