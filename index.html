@@ -157,15 +157,9 @@
       <div class="go">ひらく <span class="arr">→</span></div>
     </button>
 
-    <button class="card c-search" onclick="openApp('search')">
-      <div class="top"><span class="glyph">探</span><h2>経穴検索</h2><div class="en">POINT SEARCH</div></div>
-      <div class="desc">主治症（症状）から治療穴を検索。全361経穴×七出典の主治症データを横断。</div>
-      <div class="go">ひらく <span class="arr">→</span></div>
-    </button>
-
-    <button class="card c-bensho" onclick="openApp('bensho')">
-      <div class="top"><span class="glyph">弁</span><h2>弁証支援</h2><div class="en">PATTERN ID</div></div>
-      <div class="desc">問診から弁証鑑別・治療穴・徒手検査を提示し、カルテを管理する臨床補助ツール。</div>
+    <button class="card c-marubatsu" onclick="openApp('marubatsu')">
+      <div class="top"><span class="glyph">〇</span><h2>国試〇×問題集</h2><div class="en">TRUE / FALSE</div></div>
+      <div class="desc">過去問とAI予想を〇×形式に分解した約18,560問。一問一答で素早く知識を確認。</div>
       <div class="go">ひらく <span class="arr">→</span></div>
     </button>
 
@@ -175,15 +169,21 @@
       <div class="go">ひらく <span class="arr">→</span></div>
     </button>
 
-    <button class="card c-muscle" onclick="openApp('muscle')">
-      <div class="top"><span class="glyph">筋</span><h2>筋トレ検索</h2><div class="en">MUSCLE NAVIGATOR</div></div>
-      <div class="desc">運動レベル判定・筋肉や症状からの検索で、適した筋トレ・ケアメニューを提案。</div>
+    <button class="card c-bensho" onclick="openApp('bensho')">
+      <div class="top"><span class="glyph">弁</span><h2>弁証支援</h2><div class="en">PATTERN ID</div></div>
+      <div class="desc">問診から弁証鑑別・治療穴・徒手検査を提示し、カルテを管理する臨床補助ツール。</div>
       <div class="go">ひらく <span class="arr">→</span></div>
     </button>
 
-    <button class="card c-marubatsu" onclick="openApp('marubatsu')">
-      <div class="top"><span class="glyph">〇</span><h2>〇×問題集</h2><div class="en">TRUE / FALSE</div></div>
-      <div class="desc">過去問とAI予想を〇×形式に分解した約18,560問。一問一答で素早く知識を確認。</div>
+    <button class="card c-search" onclick="openApp('search')">
+      <div class="top"><span class="glyph">穴</span><h2>選穴支援</h2><div class="en">POINT SEARCH</div></div>
+      <div class="desc">主治症（症状）から治療穴を検索。全361経穴×七出典の主治症データを横断。</div>
+      <div class="go">ひらく <span class="arr">→</span></div>
+    </button>
+
+    <button class="card c-muscle" onclick="openApp('muscle')">
+      <div class="top"><span class="glyph">筋</span><h2>トレーニング検索</h2><div class="en">MUSCLE NAVIGATOR</div></div>
+      <div class="desc">運動レベル判定・筋肉や症状からの検索で、適した筋トレ・ケアメニューを提案。</div>
       <div class="go">ひらく <span class="arr">→</span></div>
     </button>
   </div>
@@ -238,11 +238,11 @@
    ============================================================ */
 const APPS = {
   kokushi:{ title:'国試学習',  url:'apps/kokushi/index.html', bar:'#2c5f7c' },
-  search: { title:'経穴検索',  url:'apps/search/index.html',  bar:'#b5670a' },
+  search: { title:'選穴支援',  url:'apps/search/index.html',  bar:'#b5670a' },
   bensho: { title:'弁証支援',  url:'apps/bensho/index.html',  bar:'#7a5c3e' },
   anki:   { title:'暗記アプリ',  url:'apps/anki/index.html',    bar:'#1f3a4d' },
-  muscle: { title:'筋トレ検索',  url:'apps/muscle/index.html',  bar:'#3a3a1a' },
-  marubatsu: { title:'〇×問題集', url:'apps/marubatsu/index.html', bar:'#1f5f6e' },
+  muscle: { title:'トレーニング検索',  url:'apps/muscle/index.html',  bar:'#3a3a1a' },
+  marubatsu: { title:'国試〇×問題集', url:'apps/marubatsu/index.html', bar:'#1f5f6e' },
 };
 
 const viewer  = document.getElementById('viewer');

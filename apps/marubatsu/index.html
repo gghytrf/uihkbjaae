@@ -122,6 +122,18 @@
   .menu-btn:active{ transform:scale(.98); background:#eef4f8; }
   .menu-btn .ico{ display:inline-block; width:30px; }
   .menu-btn .desc{ font-size:12px; color:var(--sub); margin-top:4px; padding-left:30px; font-weight:400; }
+  .menu-btn .label{ font-weight:700; }
+  .daily-count-row{ display:flex; gap:8px; flex-wrap:wrap; }
+  .count-btn{ flex:1; min-width:64px; padding:12px 6px; border:1px solid var(--line); background:#fff; border-radius:10px; font-size:15px; font-weight:600; color:var(--main); cursor:pointer; font-family:var(--sans); }
+  .count-btn.active{ background:var(--main); color:#fff; border-color:var(--main); }
+  .interval-row{ display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .interval-row .il-lbl{ width:120px; font-size:13px; color:var(--ink); }
+  .interval-row .il-bar{ flex:1; height:10px; background:#eef1f4; border-radius:5px; overflow:hidden; }
+  .interval-row .il-bar > i{ display:block; height:100%; border-radius:5px; }
+  .interval-row .il-num{ width:48px; text-align:right; font-weight:700; font-size:13px; color:var(--ink); }
+  .subj-prog{ margin-bottom:12px; }
+  .subj-prog .sp-head{ display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px; }
+  .subj-prog .sp-bar{ height:16px; border-radius:4px; overflow:hidden; display:flex; background:#eef1f4; }
 
   .question-meta{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:14px; font-size:12px; color:var(--sub); }
   .badge{ display:inline-block; background:var(--main); color:#fff; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700; }
@@ -204,56 +216,40 @@
 
   <!-- ===== ホーム ===== -->
   <div id="home" class="screen active">
-    <div class="stats">
-      <div class="stat-box"><div class="num" id="st-total">0</div><div class="lbl">解答数</div></div>
-      <div class="stat-box"><div class="num" id="st-rate">–</div><div class="lbl">正答率</div></div>
-      <div class="stat-box"><div class="num" id="st-streak">0</div><div class="lbl">連続正解</div></div>
+    <div class="stats" style="grid-template-columns:repeat(3,1fr);">
+      <div class="stat-box"><div class="num" id="st-total">0</div><div class="lbl">総問題数</div></div>
+      <div class="stat-box"><div class="num" id="st-answered">0</div><div class="lbl">解答済み</div></div>
+      <div class="stat-box"><div class="num" id="st-due" style="color:#ff9800;">0</div><div class="lbl">復習対象</div></div>
     </div>
 
-    <div class="card">
-      <h2>学習をはじめる</h2>
-      <button class="menu-btn" onclick="startQuiz('all')">
-        <span class="ico">📚</span>全問からランダム出題
-        <div class="desc">全範囲をシャッフルして出題</div>
-      </button>
-      <button class="menu-btn" onclick="showScreen('filter')">
-        <span class="ico">🎯</span>条件をしぼって出題
-        <div class="desc">試験種別・年度・科目で絞り込み</div>
-      </button>
-      <button class="menu-btn" onclick="showScreen('subjects')">
-        <span class="ico">🗂️</span>科目別で出題
-        <div class="desc">18科目から選んで集中学習</div>
-      </button>
-      <button class="menu-btn" onclick="startReview()">
-        <span class="ico">🔁</span>間違えた問題を復習
-        <div class="desc"><span id="wrong-count">0</span>問が復習リストにあります</div>
-      </button>
-    </div>
+    <button class="menu-btn" onclick="goDailySetup()">
+      <span class="ico">📅</span><span class="label">今日の演習</span>
+      <div class="desc">全科目から分散して未出題優先で出題</div>
+    </button>
+    <button class="menu-btn" onclick="startMode('review')">
+      <span class="ico">🔄</span><span class="label">復習モード</span>
+      <div class="desc">忘却曲線に基づき出題</div>
+    </button>
+    <button class="menu-btn" onclick="goSubjectSelect()">
+      <span class="ico">📚</span><span class="label">科目別演習</span>
+      <div class="desc">科目を選んで集中学習</div>
+    </button>
   </div>
 
-  <!-- ===== 絞り込み ===== -->
-  <div id="filter" class="screen">
+  <!-- ===== 今日の演習セットアップ ===== -->
+  <div id="daily-setup" class="screen">
     <div class="card">
-      <h2>出題条件</h2>
-      <div class="filter-grid">
-        <div>
-          <div style="font-size:13px;color:var(--sub);margin-bottom:6px;">試験種別</div>
-          <label class="radio-row"><input type="radio" name="f-exam" value="all" checked>すべて</label>
-          <label class="radio-row"><input type="radio" name="f-exam" value="hari_kyu">はり師きゅう師</label>
-          <label class="radio-row"><input type="radio" name="f-exam" value="amashi">あマ指</label>
-        </div>
-        <div>
-          <div style="font-size:13px;color:var(--sub);margin:8px 0 6px;">年度・出典</div>
-          <select id="f-year"><option value="all">すべての年度</option></select>
-        </div>
-        <div>
-          <div style="font-size:13px;color:var(--sub);margin:8px 0 6px;">科目</div>
-          <select id="f-subject"><option value="all">すべての科目</option></select>
-        </div>
+      <h2>今日の演習</h2>
+      <div style="font-size:13px;color:var(--sub);margin-bottom:12px;">未出題・復習対象を優先して、全科目から分散して出題します。問題数を選んでください。</div>
+      <div class="daily-count-row" id="daily-count-row">
+        <button class="count-btn" data-n="10">10問</button>
+        <button class="count-btn active" data-n="20">20問</button>
+        <button class="count-btn" data-n="30">30問</button>
+        <button class="count-btn" data-n="50">50問</button>
       </div>
       <div class="nav-row" style="margin-top:16px;">
         <button class="btn outline" onclick="showScreen('home')">もどる</button>
-        <button class="btn" onclick="startFiltered()">この条件で開始</button>
+        <button class="btn" onclick="startDailyMode()">演習を開始</button>
       </div>
     </div>
   </div>
@@ -317,23 +313,27 @@
   <!-- ===== 成績 ===== -->
   <div id="stats" class="screen">
     <div class="card">
-      <h2>学習記録</h2>
-      <div class="rate-lbl">通算正答率</div>
-      <div class="rate-big" id="all-rate">–</div>
-      <div class="stats" style="margin-top:16px;">
-        <div class="stat-box"><div class="num" id="all-total">0</div><div class="lbl">総解答</div></div>
-        <div class="stat-box"><div class="num" id="all-correct" style="color:var(--ok)">0</div><div class="lbl">正解</div></div>
-        <div class="stat-box"><div class="num" id="all-wrong" style="color:var(--ng)">0</div><div class="lbl">不正解</div></div>
+      <div class="stats" style="grid-template-columns:repeat(3,1fr);">
+        <div class="stat-box"><div class="num" id="all-answered">0</div><div class="lbl">解答済み</div></div>
+        <div class="stat-box"><div class="num" id="all-mastered" style="color:#2196f3;">0</div><div class="lbl">習得(Lv4以上)</div></div>
+        <div class="stat-box"><div class="num" id="all-due" style="color:#ff9800;">0</div><div class="lbl">本日の復習対象</div></div>
       </div>
     </div>
     <div class="card">
-      <h2>科目別 正答率</h2>
+      <h2>📈 復習の進度</h2>
+      <div style="font-size:13px;color:var(--sub);margin-bottom:12px;">忘却曲線レベルごとの問題数(数値が高いほど習得が進んでいる)</div>
+      <div id="stats-interval-list"></div>
+    </div>
+    <div class="card">
+      <h2>📚 科目別 学習進度</h2>
+      <div style="font-size:12px;color:var(--sub);margin-bottom:10px;">忘却曲線レベル別の問題分布。色が右に進むほど習得が進んでいます。</div>
+      <div id="stats-subject-legend" style="margin-bottom:10px;"></div>
       <div id="subject-stats"><div class="empty-state">まだ記録がありません</div></div>
     </div>
     <div class="card">
       <h2>データ管理</h2>
       <button class="menu-btn" onclick="resetProgress()"><span class="ico">🗑️</span>学習記録をリセット
-        <div class="desc">解答履歴・復習リストをすべて消去</div></button>
+        <div class="desc">解答履歴・忘却曲線をすべて消去</div></button>
     </div>
   </div>
 
@@ -350,19 +350,61 @@
 /* ====== 状態 ====== */
 let ALL = [];               // 全問題
 let YEAR_LABELS = {};       // year値 → 表示ラベル
-const LS = 'marubatsu_progress_v1';
-let progress = loadProgress();
+let PROGRESS = {};          // questionId -> {questionId,correctCount,incorrectCount,intervalLevel,lastResult,lastAnsweredAt,nextReviewAt}
+let dailyCount = 20;        // 今日の演習の問題数
 
-let session = null;         // {queue, idx, correct, wrong, answered, filter}
+let session = null;         // {queue, idx, correct, wrong, answered, mode, subject}
 
-function loadProgress(){
-  try{
-    const raw = localStorage.getItem(LS);
-    if(raw) return JSON.parse(raw);
-  }catch(e){}
-  return { total:0, correct:0, streak:0, bestStreak:0, wrongIds:[], bySubject:{} };
+const INTERVALS = [2, 3, 7, 14, 30]; // 連続正解時の日数（Lv1→2日, Lv2→3日, Lv3→7日, Lv4→14日, Lv5→30日）
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+
+/* ====== 進捗（忘却曲線）: IndexedDB 'progress' ストアに保存 ====== */
+function pgGetAll(){
+  return new Promise((resolve)=>{
+    if(!_mbdb){ resolve([]); return; }
+    const tx=_mbdb.transaction('progress','readonly'); const r=tx.objectStore('progress').getAll();
+    r.onsuccess=()=>resolve(r.result||[]); r.onerror=()=>resolve([]);
+  });
 }
-function saveProgress(){ try{ localStorage.setItem(LS, JSON.stringify(progress)); }catch(e){} }
+function pgPut(rec){
+  return new Promise((resolve)=>{
+    if(!_mbdb){ resolve(); return; }
+    const tx=_mbdb.transaction('progress','readwrite'); tx.objectStore('progress').put(rec);
+    tx.oncomplete=()=>resolve(); tx.onerror=()=>resolve();
+  });
+}
+function pgClear(){
+  return new Promise((resolve)=>{
+    if(!_mbdb){ resolve(); return; }
+    const tx=_mbdb.transaction('progress','readwrite'); tx.objectStore('progress').clear();
+    tx.oncomplete=()=>resolve(); tx.onerror=()=>resolve();
+  });
+}
+async function loadProgressAll(){
+  const list = await pgGetAll();
+  PROGRESS = {};
+  list.forEach(p=>{ PROGRESS[p.questionId]=p; });
+}
+// 解答結果を保存（忘却曲線を更新）
+async function saveProgress(qid, isCorrect){
+  const today = new Date();
+  const cur = PROGRESS[qid] || { questionId:qid, correctCount:0, incorrectCount:0, intervalLevel:0, lastResult:null, lastAnsweredAt:null, nextReviewAt:null };
+  cur.lastAnsweredAt = today.toISOString();
+  cur.lastResult = isCorrect ? 'correct' : 'incorrect';
+  if(isCorrect){
+    cur.correctCount++;
+    cur.intervalLevel = Math.min(cur.intervalLevel + 1, INTERVALS.length);
+    const days = INTERVALS[cur.intervalLevel - 1];
+    const next = new Date(today); next.setDate(next.getDate()+days);
+    cur.nextReviewAt = next.toISOString().slice(0,10);
+  }else{
+    cur.incorrectCount++;
+    cur.intervalLevel = 0;
+    cur.nextReviewAt = today.toISOString().slice(0,10); // 当日中に再出題
+  }
+  PROGRESS[qid] = cur;
+  await pgPut(cur);
+}
 
 /* ====== データ読み込み（国試学習アプリと同じ方式）======
    ・問題データは IndexedDB に保存して再利用（毎回の大きな通信を避ける）。
@@ -374,11 +416,12 @@ let _mbdb = null;
 
 function mbOpenDB(){
   return new Promise((resolve, reject)=>{
-    const req = indexedDB.open(MB_DB, 1);
+    const req = indexedDB.open(MB_DB, 2);
     req.onupgradeneeded = (e)=>{
       const db = e.target.result;
       if(!db.objectStoreNames.contains('questions')) db.createObjectStore('questions', { keyPath:'id' });
       if(!db.objectStoreNames.contains('meta')) db.createObjectStore('meta', { keyPath:'key' });
+      if(!db.objectStoreNames.contains('progress')) db.createObjectStore('progress', { keyPath:'questionId' });
     };
     req.onsuccess = ()=>resolve(req.result);
     req.onerror = ()=>reject(req.error);
@@ -428,6 +471,7 @@ async function mbFetchAndStore(){
 async function loadData(){
   try{
     _mbdb = await mbOpenDB();
+    await loadProgressAll();
     let cached = await mbGetAll('questions');
     if(cached.length === 0){
       // 初回：ネットから取得して保存
@@ -475,75 +519,107 @@ document.addEventListener('visibilitychange', async ()=>{
 });
 
 function buildFilters(){
-  // 年度（出現順を保ちつつ、数値年→ラベル化）
-  const examName = {hari_kyu:'はりきゅう', amashi:'あマ指'};
+  // 年度ラベル
   const years = [];
   ALL.forEach(q=>{ if(!years.includes(String(q.year))) years.push(String(q.year)); });
-  const yearSel = document.getElementById('f-year');
-  years.forEach(y=>{
-    const label = /^\d+$/.test(y) ? ('第'+y+'回') : y;
-    YEAR_LABELS[y] = label;
-    const o = document.createElement('option'); o.value=y; o.textContent=label; yearSel.appendChild(o);
-  });
-  // 科目
+  years.forEach(y=>{ YEAR_LABELS[y] = /^\d+$/.test(y) ? ('第'+y+'回') : y; });
+  // 科目別リスト（科目別演習）
   const subjects = [...new Set(ALL.map(q=>q.subject))].sort();
-  const subSel = document.getElementById('f-subject');
-  subjects.forEach(s=>{ const o=document.createElement('option'); o.value=s; o.textContent=s; subSel.appendChild(o); });
-  // 科目別リスト
   const list = document.getElementById('subject-list');
-  list.innerHTML = '';
-  subjects.forEach(s=>{
-    const cnt = ALL.filter(q=>q.subject===s).length;
-    const div = document.createElement('div');
-    div.className='subject-item';
-    div.innerHTML = `<span>${s}</span><span class="count">${cnt}問</span>`;
-    div.onclick = ()=> startQuiz('subject', {subject:s});
-    list.appendChild(div);
-  });
+  if(list){
+    list.innerHTML = '';
+    subjects.forEach(s=>{
+      const cnt = ALL.filter(q=>q.subject===s).length;
+      const div = document.createElement('div');
+      div.className='subject-item';
+      div.innerHTML = `<span>${s}</span><span class="count">${cnt}問</span>`;
+      div.onclick = ()=> startSubject(s);
+      list.appendChild(div);
+    });
+  }
 }
 
 /* ====== 画面遷移 ====== */
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  document.getElementById('nav-home').classList.toggle('active', id!=='stats');
-  document.getElementById('nav-stats').classList.toggle('active', id==='stats');
+  const onStats = (id==='stats');
+  document.getElementById('nav-home').classList.toggle('active', !onStats);
+  document.getElementById('nav-stats').classList.toggle('active', onStats);
   window.scrollTo(0,0);
 }
 function openStats(){ refreshStats(); showScreen('stats'); }
+function goSubjectSelect(){ showScreen('subjects'); }
+
+/* ====== 今日の演習セットアップ ====== */
+function goDailySetup(){
+  showScreen('daily-setup');
+  // ボタンのクリックハンドラ
+  document.querySelectorAll('#daily-count-row .count-btn').forEach(b=>{
+    b.onclick = ()=>{
+      document.querySelectorAll('#daily-count-row .count-btn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active'); dailyCount = parseInt(b.dataset.n);
+    };
+  });
+}
 
 /* ====== 出題開始 ====== */
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 
-function startQuiz(mode, opt){
-  let pool = ALL;
-  let filter = {mode};
-  if(mode==='subject'){ pool = ALL.filter(q=>q.subject===opt.subject); filter.subject=opt.subject; }
-  beginSession(pool, filter);
-}
-function startFiltered(){
-  const exam = document.querySelector('input[name="f-exam"]:checked').value;
-  const year = document.getElementById('f-year').value;
-  const subject = document.getElementById('f-subject').value;
-  let pool = ALL;
-  if(exam!=='all') pool = pool.filter(q=>q.examType===exam);
-  if(year!=='all') pool = pool.filter(q=>String(q.year)===year);
-  if(subject!=='all') pool = pool.filter(q=>q.subject===subject);
-  if(pool.length===0){ toast('該当する問題がありません'); return; }
-  beginSession(pool, {mode:'filter', exam, year, subject});
-}
-function startReview(){
-  if(progress.wrongIds.length===0){ toast('復習リストは空です'); return; }
-  const set = new Set(progress.wrongIds);
-  const pool = ALL.filter(q=>set.has(q.id));
-  beginSession(pool, {mode:'review'});
+// 今日の演習：未出題・復習対象を優先し、全科目から分散して出題
+function startDailyMode(){
+  const today = todayStr();
+  const unseen = [], due = [], rest = [];
+  ALL.forEach(q=>{
+    const p = PROGRESS[q.id];
+    if(!p || !p.lastAnsweredAt) unseen.push(q);
+    else if(p.nextReviewAt && p.nextReviewAt <= today) due.push(q);
+    else rest.push(q);
+  });
+  // 未出題を優先、次に復習対象、それでも足りなければその他
+  let queue = shuffle(unseen).concat(shuffle(due)).concat(shuffle(rest));
+  queue = queue.slice(0, dailyCount);
+  if(queue.length===0){ toast('出題できる問題がありません'); return; }
+  beginSession(queue, {mode:'daily'});
 }
 
-function beginSession(pool, filter){
-  const MAX = 50; // 1セッション最大問数
-  let queue = shuffle(pool);
-  if(queue.length>MAX) queue = queue.slice(0,MAX);
-  session = { queue, idx:0, correct:0, wrong:0, answered:0, filter };
+// 復習モード：忘却曲線に基づき、復習対象（nextReviewAt<=今日）を優先
+function startMode(mode){
+  if(mode!=='review') return;
+  const today = todayStr();
+  let dueList = ALL.filter(q=>{ const p=PROGRESS[q.id]; return p && p.nextReviewAt && p.nextReviewAt <= today; });
+  if(dueList.length===0){
+    // 復習対象が無ければ、間違えたことのある問題を出題
+    dueList = ALL.filter(q=>{ const p=PROGRESS[q.id]; return p && p.incorrectCount>0; });
+  }
+  if(dueList.length===0){ toast('今は復習対象の問題がありません'); return; }
+  // nextReviewAt の早い順
+  dueList.sort((a,b)=>{
+    const da=(PROGRESS[a.id]&&PROGRESS[a.id].nextReviewAt)||'9999-12-31';
+    const db=(PROGRESS[b.id]&&PROGRESS[b.id].nextReviewAt)||'9999-12-31';
+    return da<db?-1:da>db?1:0;
+  });
+  beginSession(dueList.slice(0,50), {mode:'review'});
+}
+
+// 科目別演習
+function startSubject(subject){
+  const pool = ALL.filter(q=>q.subject===subject);
+  if(pool.length===0){ toast('該当する問題がありません'); return; }
+  // 未出題→復習対象→その他 の順で出題
+  const today = todayStr();
+  const unseen=[], due=[], rest=[];
+  pool.forEach(q=>{ const p=PROGRESS[q.id];
+    if(!p||!p.lastAnsweredAt) unseen.push(q);
+    else if(p.nextReviewAt && p.nextReviewAt<=today) due.push(q);
+    else rest.push(q);
+  });
+  const queue = shuffle(unseen).concat(shuffle(due)).concat(shuffle(rest)).slice(0,50);
+  beginSession(queue, {mode:'subject', subject});
+}
+
+function beginSession(queue, meta){
+  session = { queue, idx:0, correct:0, wrong:0, answered:0, meta };
   showScreen('quiz');
   renderQuestion();
 }
@@ -551,25 +627,27 @@ function beginSession(pool, filter){
 /* ====== 問題描画 ====== */
 function renderQuestion(){
   const q = session.queue[session.idx];
-  // メタ
   const meta = document.getElementById('q-meta');
   const examLabel = q.examType==='amashi' ? 'あマ指' : 'はりきゅう';
   const examCls = q.examType==='amashi' ? 'exam-type amashi' : 'exam-type';
   const yLabel = YEAR_LABELS[String(q.year)] || q.year;
+  // 忘却曲線レベルのバッジ
+  const p = PROGRESS[q.id];
+  const lv = p ? Math.min(p.intervalLevel||0,5) : 0;
+  const lvLabels=['未学習','Lv1','Lv2','Lv3','Lv4','Lv5'];
   meta.innerHTML =
     `<span class="badge ${examCls}">${examLabel}</span>`+
     `<span class="badge subject">${q.subject}</span>`+
-    `<span>${yLabel}</span>`;
+    `<span>${yLabel}</span>`+
+    `<span class="badge" style="background:#eef1f4;color:#555;">${lvLabels[lv]}</span>`;
   document.getElementById('q-text').textContent = q.questionText;
 
-  // リセット
   document.getElementById('result-banner').style.display='none';
   document.getElementById('answer-area').style.display='none';
   document.getElementById('quiz-nav').style.display='none';
   const bm=document.getElementById('btn-maru'), bb=document.getElementById('btn-batsu');
   [bm,bb].forEach(b=>{ b.disabled=false; b.classList.remove('chosen'); });
 
-  // 進捗
   document.getElementById('q-progress').textContent = (session.idx+1)+' / '+session.queue.length;
   const rate = session.answered ? Math.round(session.correct/session.answered*100) : 0;
   document.getElementById('q-rate').textContent = rate+'%';
@@ -583,37 +661,24 @@ function answer(choice){
   bm.disabled=true; bb.disabled=true;
   (choice==='○'?bm:bb).classList.add('chosen');
 
-  // バナー
   const banner = document.getElementById('result-banner');
   banner.style.display='block';
-  if(correct){
-    banner.className='result-banner correct';
-    banner.textContent='正解！　答え：'+q.correctAnswer;
-  }else{
-    banner.className='result-banner incorrect';
-    banner.textContent='不正解　正答：'+q.correctAnswer;
-  }
-  // 解説
+  if(correct){ banner.className='result-banner correct'; banner.textContent='正解！　答え：'+q.correctAnswer; }
+  else{ banner.className='result-banner incorrect'; banner.textContent='不正解　正答：'+q.correctAnswer; }
   document.getElementById('q-explanation').textContent = q.explanation || '（解説なし）';
   document.getElementById('answer-area').style.display='block';
   document.getElementById('quiz-nav').style.display='flex';
 
-  // 集計
   session.answered++;
   if(correct){ session.correct++; } else { session.wrong++; }
-  recordAnswer(q, correct);
+  saveProgress(q.id, correct); // 忘却曲線を更新
 
-  // 最終問なら次ボタン文言変更
-  if(session.idx >= session.queue.length-1){
-    document.getElementById('next-btn').textContent='結果を見る';
-  }
+  if(session.idx >= session.queue.length-1){ document.getElementById('next-btn').textContent='結果を見る'; }
 }
 
 function nextQuestion(){
   if(session.idx >= session.queue.length-1){ finishSession(); return; }
-  session.idx++;
-  renderQuestion();
-  window.scrollTo(0,0);
+  session.idx++; renderQuestion(); window.scrollTo(0,0);
 }
 function quitQuiz(){ finishSession(); }
 
@@ -627,69 +692,94 @@ function finishSession(){
   refreshHome();
 }
 function restartSame(){
-  const f = session.filter;
-  if(f.mode==='all') startQuiz('all');
-  else if(f.mode==='subject') startQuiz('subject',{subject:f.subject});
-  else if(f.mode==='review') startReview();
-  else { // filter
-    let pool=ALL;
-    if(f.exam!=='all') pool=pool.filter(q=>q.examType===f.exam);
-    if(f.year!=='all') pool=pool.filter(q=>String(q.year)===f.year);
-    if(f.subject!=='all') pool=pool.filter(q=>q.subject===f.subject);
-    beginSession(pool, f);
-  }
-}
-
-/* ====== 記録 ====== */
-function recordAnswer(q, correct){
-  progress.total++;
-  if(correct){
-    progress.correct++;
-    progress.streak++;
-    if(progress.streak>progress.bestStreak) progress.bestStreak=progress.streak;
-    // 復習リストから除去
-    const i=progress.wrongIds.indexOf(q.id);
-    if(i>=0) progress.wrongIds.splice(i,1);
-  }else{
-    progress.streak=0;
-    if(!progress.wrongIds.includes(q.id)) progress.wrongIds.push(q.id);
-  }
-  const s = progress.bySubject[q.subject] || {total:0,correct:0};
-  s.total++; if(correct) s.correct++;
-  progress.bySubject[q.subject]=s;
-  saveProgress();
+  const m = session.meta;
+  if(m.mode==='daily') startDailyMode();
+  else if(m.mode==='review') startMode('review');
+  else if(m.mode==='subject') startSubject(m.subject);
+  else showScreen('home');
 }
 
 /* ====== 表示更新 ====== */
 function refreshHome(){
-  document.getElementById('st-total').textContent = progress.total;
-  document.getElementById('st-rate').textContent = progress.total ? Math.round(progress.correct/progress.total*100)+'%' : '–';
-  document.getElementById('st-streak').textContent = progress.streak;
-  document.getElementById('wrong-count').textContent = progress.wrongIds.length;
+  const today = todayStr();
+  const total = ALL.length;
+  const answered = Object.values(PROGRESS).filter(p=>p.lastAnsweredAt).length;
+  const due = ALL.filter(q=>{ const p=PROGRESS[q.id]; return p && p.nextReviewAt && p.nextReviewAt<=today; }).length;
+  document.getElementById('st-total').textContent = total;
+  document.getElementById('st-answered').textContent = answered;
+  document.getElementById('st-due').textContent = due;
 }
+
 function refreshStats(){
-  document.getElementById('all-total').textContent=progress.total;
-  document.getElementById('all-correct').textContent=progress.correct;
-  document.getElementById('all-wrong').textContent=progress.total-progress.correct;
-  document.getElementById('all-rate').textContent = progress.total ? Math.round(progress.correct/progress.total*100)+'%' : '–';
-  const box=document.getElementById('subject-stats');
-  const subs=Object.keys(progress.bySubject);
-  if(subs.length===0){ box.innerHTML='<div class="empty-state">まだ記録がありません</div>'; return; }
-  let html='<table class="review"><tr><th>科目</th><th>正答率</th><th>解答</th></tr>';
-  subs.sort((a,b)=> (progress.bySubject[b].correct/progress.bySubject[b].total)-(progress.bySubject[a].correct/progress.bySubject[a].total));
-  subs.forEach(s=>{
-    const d=progress.bySubject[s]; const r=Math.round(d.correct/d.total*100);
-    html+=`<tr><td>${s}</td><td>${r}%</td><td>${d.correct}/${d.total}</td></tr>`;
+  const today = todayStr();
+  const plist = Object.values(PROGRESS);
+  const answered = plist.filter(p=>p.lastAnsweredAt).length;
+  const mastered = plist.filter(p=>(p.intervalLevel||0)>=4).length;
+  const due = ALL.filter(q=>{ const p=PROGRESS[q.id]; return p && p.nextReviewAt && p.nextReviewAt<=today; }).length;
+  document.getElementById('all-answered').textContent = answered;
+  document.getElementById('all-mastered').textContent = mastered;
+  document.getElementById('all-due').textContent = due;
+
+  const levelColors=['#e0e0e0','#f44336','#ffc107','#8bc34a','#4caf50','#2196f3'];
+  const levelLabels=['未学習(レベル0)','レベル1(2日後)','レベル2(3日後)','レベル3(7日後)','レベル4(14日後)','レベル5(30日後)'];
+  // 全問をレベル別に集計（未学習=PROGRESSに無い or intervalLevel 0）
+  const counts=[0,0,0,0,0,0];
+  ALL.forEach(q=>{ const p=PROGRESS[q.id]; const lv=p?Math.min(p.intervalLevel||0,5):0; counts[lv]++; });
+  const maxc = Math.max(1, ...counts);
+  let il='';
+  for(let i=0;i<6;i++){
+    const pct = Math.round(counts[i]/maxc*100);
+    il += `<div class="interval-row"><div class="il-lbl">${levelLabels[i]}</div>`+
+          `<div class="il-bar"><i style="width:${pct}%;background:${levelColors[i]};"></i></div>`+
+          `<div class="il-num">${counts[i]}</div></div>`;
+  }
+  document.getElementById('stats-interval-list').innerHTML = il;
+
+  // 凡例
+  const shortLabels=['未学習','Lv1','Lv2','Lv3','Lv4','Lv5'];
+  let legend='<div style="display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:#555;">';
+  shortLabels.forEach((lbl,i)=>{ legend+=`<span style="display:inline-flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:${levelColors[i]};border-radius:2px;"></span>${lbl}</span>`; });
+  legend+='</div>';
+  document.getElementById('stats-subject-legend').innerHTML = legend;
+
+  // 科目別 学習進度（レベル別積み上げ）
+  const subjStats={};
+  ALL.forEach(q=>{
+    if(!subjStats[q.subject]) subjStats[q.subject]={ totalQ:0, levelCounts:[0,0,0,0,0,0] };
+    const p=PROGRESS[q.id]; const lv=p?Math.min(p.intervalLevel||0,5):0;
+    subjStats[q.subject].levelCounts[lv]++; subjStats[q.subject].totalQ++;
   });
-  html+='</table>';
+  const weights=[0,20,40,60,80,100];
+  const box=document.getElementById('subject-stats');
+  const subs=Object.keys(subjStats).sort((a,b)=>{
+    const sa=subjStats[a].levelCounts.reduce((s,c,i)=>s+c*weights[i],0)/subjStats[a].totalQ;
+    const sb=subjStats[b].levelCounts.reduce((s,c,i)=>s+c*weights[i],0)/subjStats[b].totalQ;
+    return sb-sa;
+  });
+  if(subs.length===0){ box.innerHTML='<div class="empty-state">まだ記録がありません</div>'; return; }
+  let html='';
+  subs.forEach(s=>{
+    const st=subjStats[s];
+    const score=Math.round(st.levelCounts.reduce((sum,c,i)=>sum+c*weights[i],0)/st.totalQ);
+    let seg='';
+    st.levelCounts.forEach((c,i)=>{
+      if(c===0) return;
+      const pct=c/st.totalQ*100;
+      seg+=`<div title="${shortLabels[i]}: ${c}問" style="height:100%;width:${pct}%;background:${levelColors[i]};display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:600;">${c>=Math.max(2,st.totalQ*0.06)?c:''}</div>`;
+    });
+    html+=`<div class="subj-prog"><div class="sp-head"><span>${s}</span><span style="color:var(--sub)">進度 ${score}% / 全${st.totalQ}問</span></div><div class="sp-bar">${seg}</div></div>`;
+  });
   box.innerHTML=html;
 }
-function resetProgress(){
-  if(!confirm('学習記録をすべて消去します。よろしいですか？')) return;
-  progress={ total:0, correct:0, streak:0, bestStreak:0, wrongIds:[], bySubject:{} };
-  saveProgress(); refreshHome(); refreshStats();
+
+async function resetProgress(){
+  if(!confirm('学習記録（忘却曲線・解答履歴）をすべて消去します。よろしいですか？')) return;
+  await pgClear();
+  PROGRESS={};
+  refreshHome(); refreshStats();
   toast('記録をリセットしました');
 }
+
 
 /* ====== トースト ====== */
 let toastTimer=null;
