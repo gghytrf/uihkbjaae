@@ -207,8 +207,7 @@
 </head>
 <body>
 <header>
-  <h1>〇×問題集 ─ はり師きゅう師・あマ指</h1>
-  <div class="sub">第25〜34回 国家試験＋AI予想 / 全18,560問</div>
+  <h1>国試〇×問題集</h1>
   <button onclick="window.open('./manual.html','_blank')" title="使用説明書" style="position:absolute;top:12px;right:12px;border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:7px 11px;font-size:12px;cursor:pointer;white-space:nowrap">📖 説明書</button>
 </header>
 
@@ -330,10 +329,27 @@
       <div id="stats-subject-legend" style="margin-bottom:10px;"></div>
       <div id="subject-stats"><div class="empty-state">まだ記録がありません</div></div>
     </div>
+  </div>
+
+  <!-- ===== 設定 ===== -->
+  <div id="settings" class="screen">
     <div class="card">
-      <h2>データ管理</h2>
-      <button class="menu-btn" onclick="resetProgress()"><span class="ico">🗑️</span>学習記録をリセット
-        <div class="desc">解答履歴・忘却曲線をすべて消去</div></button>
+      <h2>学習履歴の管理</h2>
+      <div style="font-size:13px;color:var(--sub);margin-bottom:12px;">学習履歴（忘却曲線・解答記録）は、この端末内に保存されています。機種変更や他端末への引き継ぎには、エクスポートで書き出したファイルを使ってください。</div>
+      <button class="menu-btn" onclick="exportProgress()"><span class="ico">📤</span><span class="label">学習履歴をエクスポート</span>
+        <div class="desc">学習履歴をファイル(JSON)に書き出して保存</div></button>
+      <button class="menu-btn" onclick="document.getElementById('import-file').click()"><span class="ico">📥</span><span class="label">学習履歴をインポート</span>
+        <div class="desc">書き出したファイルから学習履歴を復元</div></button>
+      <input type="file" id="import-file" accept="application/json,.json" style="display:none" onchange="importProgress(event)">
+      <button class="menu-btn" onclick="resetProgress()"><span class="ico">🗑️</span><span class="label">学習履歴をリセット</span>
+        <div class="desc">解答記録・忘却曲線をすべて消去（元に戻せません）</div></button>
+    </div>
+    <div class="card">
+      <h2>ℹ️ アプリ情報</h2>
+      <div style="padding:6px 2px;font-size:13px;line-height:2;color:var(--sub);">
+        <div>あん摩マッサージ指圧師・はり師きゅう師 国家試験 〇×問題集</div>
+        <div>バージョン情報・更新は統合ホーム画面で管理されます。</div>
+      </div>
     </div>
   </div>
 
@@ -342,6 +358,7 @@
 <div class="bottom-nav">
   <button class="nav-btn active" id="nav-home" onclick="showScreen('home')"><span class="ico">🏠</span>ホーム</button>
   <button class="nav-btn" id="nav-stats" onclick="openStats()"><span class="ico">📊</span>成績</button>
+  <button class="nav-btn" id="nav-settings" onclick="openSettings()"><span class="ico">⚙️</span>設定</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -543,12 +560,13 @@ function buildFilters(){
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  const onStats = (id==='stats');
-  document.getElementById('nav-home').classList.toggle('active', !onStats);
-  document.getElementById('nav-stats').classList.toggle('active', onStats);
+  document.getElementById('nav-home').classList.toggle('active', id!=='stats' && id!=='settings');
+  document.getElementById('nav-stats').classList.toggle('active', id==='stats');
+  const ns=document.getElementById('nav-settings'); if(ns) ns.classList.toggle('active', id==='settings');
   window.scrollTo(0,0);
 }
 function openStats(){ refreshStats(); showScreen('stats'); }
+function openSettings(){ showScreen('settings'); }
 function goSubjectSelect(){ showScreen('subjects'); }
 
 /* ====== 今日の演習セットアップ ====== */
@@ -773,11 +791,60 @@ function refreshStats(){
 }
 
 async function resetProgress(){
-  if(!confirm('学習記録（忘却曲線・解答履歴）をすべて消去します。よろしいですか？')) return;
+  if(!confirm('学習履歴（忘却曲線・解答記録）をすべて消去します。よろしいですか？')) return;
   await pgClear();
   PROGRESS={};
   refreshHome(); refreshStats();
-  toast('記録をリセットしました');
+  toast('学習履歴をリセットしました');
+}
+
+// 学習履歴をJSONファイルに書き出す
+function exportProgress(){
+  const data = {
+    app: 'marubatsu',
+    type: 'progress-backup',
+    exportedAt: new Date().toISOString(),
+    progress: Object.values(PROGRESS)
+  };
+  const blob = new Blob([JSON.stringify(data, null, 1)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const d = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = `marubatsu-progress-${d}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('学習履歴を書き出しました');
+}
+
+// 学習履歴をファイルから復元する
+function importProgress(ev){
+  const file = ev.target.files && ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async ()=>{
+    try{
+      const data = JSON.parse(reader.result);
+      const list = Array.isArray(data) ? data : (data.progress || []);
+      if(!Array.isArray(list) || list.length===0){ toast('読み込めるデータがありません'); return; }
+      if(!confirm(`${list.length}問分の学習履歴を読み込みます。現在の履歴に統合してよろしいですか？`)){ ev.target.value=''; return; }
+      let n=0;
+      for(const rec of list){
+        if(rec && rec.questionId){
+          PROGRESS[rec.questionId] = rec;
+          await pgPut(rec);
+          n++;
+        }
+      }
+      refreshHome(); refreshStats();
+      toast(`学習履歴を読み込みました（${n}問）`);
+    }catch(e){
+      toast('ファイルの読み込みに失敗しました');
+      console.error(e);
+    }finally{
+      ev.target.value='';
+    }
+  };
+  reader.readAsText(file);
 }
 
 

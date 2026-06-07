@@ -289,8 +289,9 @@
 <body>
 
 <header>
-  <h1 id="screen-title">はり師きゅう師・あマ指　国試学習アプリ</h1>
+  <h1 id="screen-title">国試学習アプリ</h1>
   <div class="subtitle" id="screen-subtitle"></div>
+  <button onclick="openManual()" title="使用説明書" style="position:absolute;top:12px;right:14px;border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.14);color:#fff;border-radius:8px;padding:7px 11px;font-size:12px;cursor:pointer;white-space:nowrap;font-family:inherit;">📖 説明書</button>
 </header>
 
 <div class="container">
@@ -778,9 +779,6 @@
       <div style="font-size: 13px; color: #4a5a6a; line-height: 1.7;">
         <p>はり師きゅう師・あマ指の国家試験対策学習アプリ</p>
       </div>
-      <button class="btn outline full" onclick="openManual()" style="margin-top: 14px; font-size: 14px;">
-        📖 使用説明書を開く
-      </button>
     </div>
 
     <div class="card">
@@ -2720,7 +2718,7 @@ function goHome() {
   }
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('nav-home').classList.add('active');
-  showScreen('home', 'はり師きゅう師・あマ指　国試学習アプリ', '');
+  showScreen('home', '国試学習アプリ', '');
   updateHomeStats();
 }
 
