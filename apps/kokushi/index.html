@@ -3969,6 +3969,20 @@ if ('serviceWorker' in navigator) {
     }
   });
 
+  // フォアグラウンド復帰時：前回確認から48時間以上経過していれば、
+  // そのタイミングで問題データの更新を確認する（ホーム側では7MBを取得しない）。
+  document.addEventListener('visibilitychange', async () => {
+    if (document.hidden) return;
+    try {
+      const CHECK_INTERVAL_MS = 48 * 60 * 60 * 1000;
+      const rec = await dbGet('settings', 'lastUpdateCheckedAt');
+      const last = rec ? new Date(rec.value).getTime() : 0;
+      if (Date.now() - last >= CHECK_INTERVAL_MS) {
+        await performUpdateCheck(false); // サイレント確認（更新があればデータのみ差し替え）
+      }
+    } catch (e) { /* オフライン等はサイレント */ }
+  });
+
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
       .then(reg => {
