@@ -493,15 +493,19 @@ async function loadData(){
           '<div class="empty-state"><div class="big">📶</div>初回はインターネット接続が必要です。<br>接続してから開き直してください。</div>';
         return;
       }
+      buildFilters();
+      refreshHome();
+      toast('問題データ読込: ' + ALL.length + '問'); // 通信したときだけ表示
     }else{
       ALL = cached;
-      // 48時間経過していれば、バックグラウンドで最新を確認・差し替え
+      buildFilters();
+      refreshHome();
+      // 48時間経過していれば、バックグラウンドで最新を確認・差し替え（通信時のみトースト）
       const last = await mbGetMeta('lastChecked') || 0;
-      if(Date.now() - last >= MB_CHECK_MS){ mbFetchAndStore().then(()=>{ buildFilters(); refreshHome(); }); }
+      if(Date.now() - last >= MB_CHECK_MS){
+        mbFetchAndStore().then(ok=>{ if(ok){ buildFilters(); refreshHome(); toast('問題データ読込: ' + ALL.length + '問'); } });
+      }
     }
-    buildFilters();
-    refreshHome();
-    toast('問題データ読込: ' + ALL.length + '問');
   }catch(e){
     // IndexedDB が使えない環境では従来どおり都度取得にフォールバック
     try{
@@ -509,7 +513,7 @@ async function loadData(){
       const data = await res.json();
       ALL = data.questions || [];
       buildFilters(); refreshHome();
-      toast('問題データ読込: ' + ALL.length + '問');
+      toast('問題データ読込: ' + ALL.length + '問'); // 通信したときだけ表示
     }catch(e2){
       document.querySelector('#home .card').innerHTML =
         '<div class="empty-state"><div class="big">⚠️</div>問題データを読み込めませんでした。<br>インターネット接続を確認してください。</div>';
@@ -558,6 +562,7 @@ function showScreen(id){
   document.getElementById('nav-home').classList.toggle('active', id!=='stats' && id!=='settings');
   document.getElementById('nav-stats').classList.toggle('active', id==='stats');
   const ns=document.getElementById('nav-settings'); if(ns) ns.classList.toggle('active', id==='settings');
+  if(id==='home') refreshHome();   // ホームに戻るたびに復習対象数などを最新化
   window.scrollTo(0,0);
 }
 function openStats(){ refreshStats(); showScreen('stats'); }
