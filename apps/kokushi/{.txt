@@ -1,0 +1,8 @@
+{
+  "schemaVersion": "1.0",
+  "questionDataVersion": "2026.6.4",
+  "lastUpdated": "2026-06-04",
+  "description": "あん摩マッサージ指圧師・はり師きゅう師国家試験 対策問題集",
+  "totalCount": 12080,
+  "questions": 
+}
