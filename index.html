@@ -272,7 +272,7 @@ const appbar  = document.getElementById('appbar');
 const appTitle= document.getElementById('appTitle');
 let currentApp = null;
 
-function openApp(key, fromHash){
+function openApp(key, fromPop){
   if(typeof blocked !== 'undefined' && blocked){ return; } // 再読み込み画面表示中は開かない
   const app = APPS[key]; if(!app) return;
   currentApp = key;
@@ -286,43 +286,49 @@ function openApp(key, fromHash){
   if(frame.src !== want) frame.src = app.url; else floader.style.display='none';
   viewer.classList.add('show');
   viewer.setAttribute('aria-hidden','false');
-  if(!fromHash && location.hash !== '#'+key) location.hash = key;
+  // 履歴：ユーザー操作で開いた場合のみ履歴を進める（戻るでホームに戻れるように）。
+  // popstate由来（戻る/進む）で開いた場合は履歴を触らない。
+  if(!fromPop){
+    try{ history.pushState({ app:key }, '', '#'+key); }catch(e){ location.hash=key; }
+  }
 }
 
-function closeApp(skipHistory){
+function closeApp(){
   viewer.classList.remove('show');
   viewer.setAttribute('aria-hidden','true');
   document.querySelector('meta[name=theme-color]').setAttribute('content', '#b03a2e');
   currentApp = null;
-  if(!skipHistory && location.hash) history.pushState('', document.title, location.pathname + location.search);
 }
 
-// ブラウザ／端末の戻る操作に対応
-window.addEventListener('hashchange', routeFromHash);
+// ===== 履歴・端末の「戻る」ボタン対策 =====
+//  方針：状態は History API の state で管理する（hashの直接書き換えはしない）。
+//   ・ホーム表示時は state={home:true} を土台として常に1つ積んでおく。
+//   ・アプリを開くと state={app:key} を push（戻る＝ホームに戻る）。
+//   ・ホームで戻ると、土台に戻る→即座に土台を積み直して「留まる」（PWAが終了しない）。
+function routeFromState(st, fromPop){
+  const key = (st && st.app) || (location.hash ? location.hash.replace('#','') : '');
+  if(APPS[key]) openApp(key, fromPop);
+  else closeApp();
+}
+window.addEventListener('popstate', function(e){
+  const st = e.state;
+  if(st && st.app && APPS[st.app]){
+    // 進む/戻るでアプリ状態へ
+    routeFromState(st, true);
+  }else{
+    // ホーム土台に戻った／戻ろうとした
+    if(currentApp){
+      closeApp(); // アプリ表示中なら閉じてホームへ
+    }
+    // 土台を必ず1つ積み直し、これ以上戻ってPWAが終了しないようにする
+    history.pushState({ home:true }, '', location.pathname + location.search);
+  }
+});
+// 互換：旧ハッシュ起動にも対応
 function routeFromHash(){
   const key = location.hash.replace('#','');
   if(APPS[key]) openApp(key, true);
-  else closeApp();
 }
-
-// ===== 端末の「戻る」ボタン対策 =====
-//  OS（特にAndroid）のシステムナビゲーション（戻る/ホーム/履歴）は、
-//  Webアプリ側から消すことはできない。そこで「戻る」を無効化する。
-//  ・アプリを開いているとき → 戻るでホームに戻る（アプリ終了・誤離脱を防ぐ）
-//  ・ホームにいるとき        → 戻るを吸収してその場に留まる（PWAが終了しないように）
-(function backGuard(){
-  // 履歴に番兵を積んでおき、戻る操作をここで受け止める
-  history.pushState({ _guard:true }, '', location.href);
-  window.addEventListener('popstate', function(){
-    if(currentApp){
-      // アプリ表示中 → ホームへ戻す（離脱させない）。ハッシュは表示だけ消す。
-      if(location.hash){ try{ history.replaceState('', document.title, location.pathname + location.search); }catch(e){} }
-      closeApp(true);
-    }
-    // いずれの場合も番兵を再投入して、これ以上戻れない（＝終了しない）ようにする
-    history.pushState({ _guard:true }, '', location.href);
-  });
-})();
 
 // ===== オンライン専用・バージョン管理 =====
 //  方針：コンテンツは永続キャッシュしない（オフライン保存させない）。
@@ -619,7 +625,17 @@ function showToastHome(msg){
 
 // 起動
 (function boot(){
-  routeFromHash();
+  // ホームの土台となる履歴状態を1つ用意（戻るを吸収する受け皿）。
+  try{ history.replaceState({ home:true }, '', location.href); }catch(e){}
+  // リロード復帰：URLにハッシュ（#kokushi 等）があれば、そのアプリを開き直す。
+  if(location.hash){
+    const key = location.hash.replace('#','');
+    if(APPS[key]){
+      // 復帰時もアプリ状態を履歴に積む（戻る＝ホーム）。
+      try{ history.pushState({ app:key }, '', '#'+key); }catch(e){}
+      openApp(key, true);
+    }
+  }
   verifyOnStart();
 })();
 </script>
