@@ -347,8 +347,10 @@
     .symptom-grid{grid-template-columns:repeat(2,1fr);}
     header{padding:1.2rem 1rem 0.7rem;}
     .panel{padding:1.2rem 1rem;}
-    .mode-tabs{margin:1.2rem 1rem 0; overflow-x:auto;}
-    .tab-btn{min-width:120px; font-size:0.72rem;}
+    .mode-tabs{margin:1.2rem 1rem 0; flex-wrap:wrap; border-bottom:none; gap:6px;}
+    .tab-btn{flex:1 1 30%; min-width:0; font-size:0.72rem; text-align:center; border:1px solid var(--border); border-radius:8px; padding:0.6rem 0.3rem; border-bottom:1px solid var(--border);}
+    .tab-btn.active{ border-color:var(--accent); border-bottom-color:var(--accent); background:rgba(255,255,255,.04); }
+    .tab-btn .tab-num{ font-size:1.2rem; display:inline; margin:0 0.2rem 0 0; }
     .lf-grid3{grid-template-columns:1fr;}
   }
 </style>

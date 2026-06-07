@@ -414,10 +414,7 @@
   <div class="info" id="storeInfo"></div>
   <div class="toolbar">
     <input class="search" id="searchBox" placeholder="患者番号・氏名で検索" oninput="renderCharts()">
-    <button class="btn-ghost mini" onclick="exportJSON()">⬇ バックアップ(JSON)</button>
-    <button class="btn-ghost mini" onclick="document.getElementById('importFile').click()">⬆ 読込(JSON)</button>
     <button class="btn-ghost mini" onclick="exportCSV()">CSV出力</button>
-    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
   </div>
   <div id="chartList"></div>
 </section>
@@ -469,8 +466,6 @@
         <li><b>✎ この記録を編集</b>：その来院記録を直せます。保存すると編集履歴（作成・編集の日時）が記録されます。</li>
         <li><b>🖨 このカルテを印刷/PDF</b>：その患者の全来院記録を印刷・PDF出力します。</li>
         <li><b>📋 直近を入力欄に呼出</b>：前回の内容を問診欄に呼び戻し、再診の記録を続けて入力できます。</li>
-        <li><b>⬇ バックアップ(JSON)</b>：全カルテをファイルに書き出します。</li>
-        <li><b>⬆ 読込(JSON)</b>：バックアップファイルを取り込みます。既存データに統合（マージ）され、消えません。同じ記録は編集日時が新しい方が採用されます。</li>
         <li><b>CSV出力</b>：全カルテを表計算ソフト用に書き出します。</li>
       </ul>
 
@@ -478,7 +473,7 @@
       <p>カルテはこのページを開いたブラウザの中（localStorage）に保存され、外部には送信されません。保存はブラウザ単位なので、別のブラウザ・別の端末とは共有されません。</p>
       <ul>
         <li>ブラウザの「サイトデータ削除」を行うとカルテも消えます。</li>
-        <li>大切なデータは定期的に<b>⬇ バックアップ(JSON)</b>で書き出し、別の場所（クラウドやUSBなど）に保管してください。万一消えても<b>⬆ 読込(JSON)</b>で復元でき、別端末への移行もできます。</li>
+        <li>カルテを含む全アプリのデータのバックアップ（書き出し・復元）は、統合ホーム画面下部の「学習データのバックアップ」からまとめて行えます。大切なデータは定期的にバックアップして、別の場所（クラウドやUSBなど）に保管してください。別端末への移行もこれで行えます。</li>
       </ul>
 
       <div class="modal-foot"><button class="btn-primary" onclick="closeHelp()">閉じる</button></div>

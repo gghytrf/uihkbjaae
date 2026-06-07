@@ -37,6 +37,8 @@
   #home{min-height:100%;display:flex;flex-direction:column;
     padding:max(26px,env(safe-area-inset-top)) 18px 40px;max-width:760px;margin:0 auto;}
   .brand{display:flex;align-items:center;gap:13px;margin:8px 2px 4px}
+  .btn-manual-home{margin-left:auto;flex:none;border:1px solid var(--line);background:#fff;color:var(--indigo);font:inherit;font-size:12px;padding:8px 12px;border-radius:10px;cursor:pointer;white-space:nowrap}
+  .btn-manual-home:hover{background:var(--paper2,#faf6ed)}
   .brand .seal{font-family:'Shippori Mincho',serif;font-weight:800;background:var(--cinnabar);color:var(--paper);
     width:48px;height:48px;display:grid;place-items:center;border-radius:8px;font-size:25px;flex:none;
     box-shadow:2.5px 2.5px 0 var(--cinnabar-d);transform:rotate(-2deg);}
@@ -95,6 +97,13 @@
   .credit-mail a{color:var(--indigo);text-decoration:none}
   .credit-mail a:hover{text-decoration:underline}
 
+  .backup-box{margin-top:18px;padding:14px 16px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 2px 6px rgba(0,0,0,.04)}
+  .backup-title{font-family:'Shippori Mincho',serif;font-weight:700;font-size:14px;color:var(--indigo);margin-bottom:6px}
+  .backup-note{font-size:11.5px;color:#8a7d63;line-height:1.7;margin-bottom:10px}
+  .backup-btns{display:flex;gap:8px;flex-wrap:wrap}
+  .btn-backup{flex:1;min-width:150px;border:1px solid var(--line);background:var(--paper2,#faf6ed);color:var(--indigo);font:inherit;font-size:13px;font-weight:500;padding:10px 12px;border-radius:10px;cursor:pointer}
+  .btn-backup:hover{background:#f1e9d8}
+
   /* ===== アプリ表示（iframe）===== */
   #viewer{position:fixed;inset:0;z-index:100;display:none;flex-direction:column;background:var(--paper)}
   #viewer.show{display:flex}
@@ -147,6 +156,7 @@
   <div class="brand">
     <div class="seal">医</div>
     <h1>東洋医学 学習スイート<small>TOYO IGAKU — STUDY SUITE</small></h1>
+    <button class="btn-manual-home" onclick="window.open('./manual.html','_blank')" title="使用説明書">📖 説明書</button>
   </div>
   <p class="lead">学習したいアプリを選んでください。各アプリの学習データ・カルテはこれまで通り端末内に保存され、引き続き使えます。</p>
 
@@ -190,6 +200,16 @@
 
   <div class="home-foot">
     <span class="ver" id="verLabel">バージョン: 読み込み中…</span>
+  </div>
+
+  <div class="backup-box">
+    <div class="backup-title">学習データのバックアップ</div>
+    <div class="backup-note">全アプリの学習履歴・編集内容（国試の進度・〇×の進度・弁証の編集やカルテ・筋トレ記録など）を、1つのファイルにまとめて保存・復元できます。機種変更や端末の移行にお使いください。</div>
+    <div class="backup-btns">
+      <button class="btn-backup" onclick="exportAllData()">📤 全データをバックアップ</button>
+      <button class="btn-backup" onclick="document.getElementById('restore-file').click()">📥 バックアップから復元</button>
+      <input type="file" id="restore-file" accept="application/json,.json" style="display:none" onchange="importAllData(event)">
+    </div>
   </div>
 
   <div class="credit">
@@ -269,12 +289,12 @@ function openApp(key, fromHash){
   if(!fromHash && location.hash !== '#'+key) location.hash = key;
 }
 
-function closeApp(){
+function closeApp(skipHistory){
   viewer.classList.remove('show');
   viewer.setAttribute('aria-hidden','true');
   document.querySelector('meta[name=theme-color]').setAttribute('content', '#b03a2e');
   currentApp = null;
-  if(location.hash) history.pushState('', document.title, location.pathname + location.search);
+  if(!skipHistory && location.hash) history.pushState('', document.title, location.pathname + location.search);
 }
 
 // ブラウザ／端末の戻る操作に対応
@@ -284,6 +304,25 @@ function routeFromHash(){
   if(APPS[key]) openApp(key, true);
   else closeApp();
 }
+
+// ===== 端末の「戻る」ボタン対策 =====
+//  OS（特にAndroid）のシステムナビゲーション（戻る/ホーム/履歴）は、
+//  Webアプリ側から消すことはできない。そこで「戻る」を無効化する。
+//  ・アプリを開いているとき → 戻るでホームに戻る（アプリ終了・誤離脱を防ぐ）
+//  ・ホームにいるとき        → 戻るを吸収してその場に留まる（PWAが終了しないように）
+(function backGuard(){
+  // 履歴に番兵を積んでおき、戻る操作をここで受け止める
+  history.pushState({ _guard:true }, '', location.href);
+  window.addEventListener('popstate', function(){
+    if(currentApp){
+      // アプリ表示中 → ホームへ戻す（離脱させない）。ハッシュは表示だけ消す。
+      if(location.hash){ try{ history.replaceState('', document.title, location.pathname + location.search); }catch(e){} }
+      closeApp(true);
+    }
+    // いずれの場合も番兵を再投入して、これ以上戻れない（＝終了しない）ようにする
+    history.pushState({ _guard:true }, '', location.href);
+  });
+})();
 
 // ===== オンライン専用・バージョン管理 =====
 //  方針：コンテンツは永続キャッシュしない（オフライン保存させない）。
@@ -466,6 +505,117 @@ if('serviceWorker' in navigator){
 // オンライン復帰・バックグラウンド→フォアグラウンド復帰で強制確認
 window.addEventListener('online', ()=>recheck());
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) recheck(); });
+
+// ===== 全アプリ一括バックアップ =====
+// 各アプリは同一オリジン配下のため、ホームから localStorage と IndexedDB に直接アクセスできる。
+const BACKUP_LS_KEYS = ['tcm_edits_v1','tcm_qform_v1','tcm_charts_v1','muscle_nav_logs'];
+const BACKUP_IDB = [
+  { db:'StudyAppDB',   stores:['progress','settings','paperSessions'] }, // 国試学習
+  { db:'MarubatsuDB',  stores:['progress'] },                            // 〇×問題集
+];
+function idbOpen(name){
+  return new Promise((resolve,reject)=>{ const r=indexedDB.open(name); r.onsuccess=()=>resolve(r.result); r.onerror=()=>reject(r.error); });
+}
+// 指定ストアが全て存在する状態でDBを開く（無ければバージョンを上げて作成）。keyPathはアプリと合わせる。
+const STORE_KEYPATH = { progress:'questionId', settings:'key', paperSessions:'id', questions:'id', meta:'key' };
+const DB_TARGET_VERSION = { StudyAppDB:3, MarubatsuDB:2 }; // 各アプリが使うバージョンに合わせる
+function idbOpenEnsure(name, stores){
+  return new Promise((resolve,reject)=>{
+    const r=indexedDB.open(name);
+    r.onsuccess=()=>{
+      const db=r.result;
+      const missing=stores.filter(s=>!db.objectStoreNames.contains(s));
+      if(missing.length===0){ resolve(db); return; }
+      // 不足ストアがある＝アプリ未起動などでDBが不完全。アプリと同じバージョンで開き直して作成。
+      const target=Math.max(db.version, DB_TARGET_VERSION[name]||(db.version+1));
+      db.close();
+      const r2=indexedDB.open(name, target);
+      r2.onupgradeneeded=(e)=>{ const d=e.target.result; stores.forEach(s=>{ if(!d.objectStoreNames.contains(s)) d.createObjectStore(s,{keyPath:STORE_KEYPATH[s]||'id'}); }); };
+      r2.onsuccess=()=>resolve(r2.result); r2.onerror=()=>reject(r2.error);
+    };
+    r.onerror=()=>reject(r.error);
+  });
+}
+function idbGetAll(db, store){
+  return new Promise((resolve)=>{
+    if(!db.objectStoreNames.contains(store)){ resolve([]); return; }
+    const tx=db.transaction(store,'readonly'); const r=tx.objectStore(store).getAll();
+    r.onsuccess=()=>resolve(r.result||[]); r.onerror=()=>resolve([]);
+  });
+}
+function idbPutAll(db, store, items){
+  return new Promise((resolve)=>{
+    if(!items || !items.length){ resolve(); return; }
+    if(!db.objectStoreNames.contains(store)){ resolve(); return; }
+    const tx=db.transaction(store,'readwrite'); const os=tx.objectStore(store);
+    items.forEach(it=>{ try{ os.put(it); }catch(e){} });
+    tx.oncomplete=()=>resolve(); tx.onerror=()=>resolve();
+  });
+}
+
+async function exportAllData(){
+  try{
+    const out = { app:'toyo-igaku-suite', type:'full-backup', version:1, exportedAt:new Date().toISOString(), localStorage:{}, indexedDB:{} };
+    // localStorage（弁証の編集・カルテ・問診表、筋トレ記録 など）
+    BACKUP_LS_KEYS.forEach(k=>{ const v=localStorage.getItem(k); if(v!=null) out.localStorage[k]=v; });
+    // IndexedDB（国試・〇×の学習履歴）
+    for(const spec of BACKUP_IDB){
+      try{
+        const db=await idbOpen(spec.db);
+        out.indexedDB[spec.db]={};
+        for(const st of spec.stores){ out.indexedDB[spec.db][st]=await idbGetAll(db, st); }
+        db.close();
+      }catch(e){ /* DB未作成（未使用アプリ）はスキップ */ }
+    }
+    const blob=new Blob([JSON.stringify(out)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download=`toyo-igaku-suite-backup-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    showToastHome('全データをバックアップしました');
+  }catch(e){ alert('バックアップに失敗しました: '+e.message); }
+}
+
+function importAllData(ev){
+  const file=ev.target.files && ev.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=async ()=>{
+    try{
+      const data=JSON.parse(reader.result);
+      if(!data || data.type!=='full-backup'){ alert('このファイルは学習スイートのバックアップではありません。'); ev.target.value=''; return; }
+      if(!confirm('バックアップから全アプリのデータを復元します。現在のデータに上書き・統合されます。よろしいですか？')){ ev.target.value=''; return; }
+      // localStorage 復元
+      if(data.localStorage){ Object.keys(data.localStorage).forEach(k=>{ try{ localStorage.setItem(k, data.localStorage[k]); }catch(e){} }); }
+      // IndexedDB 復元
+      if(data.indexedDB){
+        for(const spec of BACKUP_IDB){
+          const dump=data.indexedDB[spec.db]; if(!dump) continue;
+          try{
+            const db=await idbOpenEnsure(spec.db, spec.stores);
+            for(const st of spec.stores){ if(dump[st]) await idbPutAll(db, st, dump[st]); }
+            db.close();
+          }catch(e){ /* 対象アプリを一度も開いていないとDBが無い */ }
+        }
+      }
+      showToastHome('バックアップから復元しました');
+      alert('復元が完了しました。各アプリを開くと反映されます。');
+    }catch(e){ alert('ファイルの読み込みに失敗しました: '+e.message); }
+    finally{ ev.target.value=''; }
+  };
+  reader.readAsText(file);
+}
+
+// 簡易トースト（ホーム）
+let _homeToastTimer=null;
+function showToastHome(msg){
+  let t=document.getElementById('home-toast');
+  if(!t){ t=document.createElement('div'); t.id='home-toast';
+    t.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#2c4a52;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;z-index:9999;box-shadow:0 4px 14px rgba(0,0,0,.25);opacity:0;transition:opacity .2s';
+    document.body.appendChild(t); }
+  t.textContent=msg; t.style.opacity='1';
+  clearTimeout(_homeToastTimer); _homeToastTimer=setTimeout(()=>{ t.style.opacity='0'; },2200);
+}
 
 // 起動
 (function boot(){

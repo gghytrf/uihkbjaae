@@ -775,13 +775,6 @@
   <div class="screen" id="screen-settings">
 
     <div class="card">
-      <h2>このアプリについて</h2>
-      <div style="font-size: 13px; color: #4a5a6a; line-height: 1.7;">
-        <p>はり師きゅう師・あマ指の国家試験対策学習アプリ</p>
-      </div>
-    </div>
-
-    <div class="card">
       <h2>出題設定</h2>
       <div class="setting-row">
         <div>
@@ -815,22 +808,7 @@
     </div>
 
     <div class="card">
-      <h2>学習履歴のバックアップ</h2>
-      <div class="setting-row">
-        <div>
-          <div class="lbl">データのエクスポート</div>
-          <div class="desc">学習履歴をJSONで書き出し</div>
-        </div>
-        <button class="btn" onclick="exportData()" style="padding: 8px 14px; font-size: 13px;">📥 出力</button>
-      </div>
-      <div class="setting-row">
-        <div>
-          <div class="lbl">データのインポート</div>
-          <div class="desc">バックアップから復元</div>
-        </div>
-        <button class="btn secondary" onclick="document.getElementById('import-file').click()" style="padding: 8px 14px; font-size: 13px;">📤 取込</button>
-        <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importData(event)">
-      </div>
+      <h2>学習履歴の管理</h2>
       <div class="setting-row">
         <div>
           <div class="lbl">学習履歴をリセット</div>
@@ -838,6 +816,7 @@
         </div>
         <button class="btn danger" onclick="confirmReset()" style="padding: 8px 14px; font-size: 13px;">🗑️ 削除</button>
       </div>
+      <div style="font-size:12px;color:#7a8a99;margin-top:10px;line-height:1.7;">バックアップ（書き出し・復元）は、統合ホーム画面下部の「学習データのバックアップ」からまとめて行えます。</div>
     </div>
 
   </div>
@@ -3841,56 +3820,6 @@ function renderSettingsYearList() {
 //=========================================================
 // データ管理
 //=========================================================
-async function exportData() {
-  const data = {
-    version: '0.1.0',
-    exportedAt: new Date().toISOString(),
-    progress: await dbGetAll('progress'),
-    memos: await dbGetAll('memos'),
-    mutedQuestions: await dbGetAll('mutedQuestions'),
-    settings: await dbGetAll('settings')
-  };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  a.href = url;
-  a.download = `study_backup_${dateStr}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('バックアップを出力しました');
-}
-
-async function importData(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  try {
-    const text = await file.text();
-    const data = JSON.parse(text);
-
-    if (!data.version) throw new Error('無効なファイル形式です');
-
-    if (!confirm('現在の学習履歴を上書きします。よろしいですか?')) return;
-
-    await dbClear('progress');
-    await dbClear('memos');
-    if (data.progress) for (const p of data.progress) await dbPut('progress', p);
-    if (data.memos) for (const m of data.memos) await dbPut('memos', m);
-    // 出題除外（旧バージョンのバックアップには含まれない。キーがある場合のみ復元）
-    if (Array.isArray(data.mutedQuestions)) {
-      await dbClear('mutedQuestions');
-      for (const m of data.mutedQuestions) await dbPut('mutedQuestions', m);
-    }
-    if (data.settings) for (const s of data.settings) await dbPut('settings', s);
-
-    showToast('インポートが完了しました');
-    setTimeout(() => location.reload(), 800);
-  } catch (e) {
-    alert('インポートに失敗しました: ' + e.message);
-  }
-  event.target.value = '';
-}
-
 function confirmReset() {
   showModal('学習履歴をリセット', 'すべての学習履歴・メモが削除されます。問題データは保持されます。よろしいですか?', async () => {
     await dbClear('progress');

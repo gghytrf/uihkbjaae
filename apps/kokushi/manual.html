@@ -1212,39 +1212,28 @@ footer a{color:var(--mid)}
 
       <div>
         <div class="setting-card">
-          <div class="setting-head">💾 学習履歴バックアップ</div>
-          <div class="setting-row" style="cursor:pointer">
-            <div class="setting-lbl">📥 学習履歴をエクスポート（出力）</div>
-            <span class="badge-link">›</span>
-          </div>
-          <div class="setting-row" style="cursor:pointer">
-            <div class="setting-lbl">📤 学習履歴をインポート（取込）</div>
-            <span class="badge-link">›</span>
-          </div>
+          <div class="setting-head">💾 学習履歴の管理</div>
           <div class="setting-row" style="cursor:pointer">
             <div class="setting-lbl" style="color:var(--red)">🗑️ 学習履歴をリセット（削除）</div>
             <span class="badge-link" style="color:var(--red)">›</span>
           </div>
         </div>
 
-        <table class="tbl" style="margin-top:16px">
-          <thead><tr><th>操作</th><th>内容</th></tr></thead>
-          <tbody>
-            <tr><td>📥 エクスポート</td><td>学習履歴をJSONファイルで書き出します</td></tr>
-            <tr><td>📤 インポート</td><td>バックアップJSONから学習履歴を復元します</td></tr>
-            <tr><td>🗑️ リセット</td><td>学習履歴をすべて削除します（問題データは保持）</td></tr>
-          </tbody>
-        </table>
+        <div class="callout callout-info">
+          <div class="ico">💾</div>
+          <div class="body">
+            <h4>バックアップは統合ホームから</h4>
+            <p>学習履歴の書き出し・復元は、各アプリではなく統合ホーム画面下部の「学習データのバックアップ」からまとめて行います（→11章）。全アプリのデータを1つのファイルにまとめて保存・復元でき、機種変更時の引き継ぎもこれだけで済みます。</p>
+          </div>
+        </div>
 
         <div class="callout callout-warn">
           <div class="ico">⚠️</div>
           <div class="body">
             <h4>機種変更・引き継ぎの手順</h4>
-            <p>① 旧端末で「学習履歴をエクスポート」→ JSONファイルを保存<br>
+            <p>① 旧端末で統合ホームの「全データをバックアップ」→ JSONファイルを保存<br>
                ② 新端末でアプリURLを開く<br>
-               ③ 新端末で「学習履歴をインポート」でJSONを読み込む<br>
-               ※学習履歴に個人を特定する情報は含まれていません。<br>
-               ※上手くいかない場合、表示された内容をメモ帳にコピペ・保存→jsonファイルへ変換してください。（「txt json 変換」と検索）</p>
+               ③ 新端末で統合ホームの「バックアップから復元」でJSONを読み込む</p>
           </div>
         </div>
       </div>
@@ -1358,56 +1347,50 @@ footer a{color:var(--mid)}
       </div>
     </div>
 
+    <div class="callout callout-info" style="margin-top:24px">
+      <div class="ico">💾</div>
+      <div class="body">
+        <h4>バックアップは統合ホームから一括で</h4>
+        <p>学習履歴のバックアップ（書き出し）と復元（取り込み）は、各アプリではなく統合ホーム画面でまとめて行います。国試学習・〇×問題集の学習履歴、弁証支援の編集内容やカルテ、筋トレ記録などを、1つのファイルにまとめて保存・復元できます。</p>
+      </div>
+    </div>
+
     <div class="two-col" style="margin-top:24px">
       <div>
-        <div class="sh3" style="margin-top:0">📤 バックアップ（エクスポート）</div>
+        <div class="sh3" style="margin-top:0">📤 バックアップ（書き出し）</div>
         <div class="steps">
           <div class="step">
             <div class="step-n">1</div>
             <div class="step-body">
-              <h4>設定画面を開く</h4>
-              <p>下部ナビゲーションの「⚙️ 設定」をタップします。</p>
+              <h4>統合ホーム画面を開く</h4>
+              <p>各アプリ左上の「‹ ホーム」から、アプリ一覧のホーム画面に戻ります。</p>
             </div>
           </div>
           <div class="step">
             <div class="step-n">2</div>
             <div class="step-body">
-              <h4>「学習履歴をエクスポート」をタップ</h4>
-              <p>「study_progress_バックアップ日.json」というファイルが自動的にダウンロードされます。<br>※学習履歴に個人を特定する情報は含まれていません。<br>※上手くいかない場合、表示された内容をメモ帳へコピペ・保存→jsonファイルへ変換してください。（「txt json 変換」と検索）</p>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-n">3</div>
-            <div class="step-body">
-              <h4>安全な場所に保存</h4>
-              <p>Googleドライブ・iCloud・PCのローカルフォルダなどに保存してください。</p>
+              <h4>「全データをバックアップ」をタップ</h4>
+              <p>画面下部の「学習データのバックアップ」にあるボタンを押すと、全アプリのデータをまとめたJSONファイルがダウンロードされます。Googleドライブ・iCloud・PCなど安全な場所に保存してください。</p>
             </div>
           </div>
         </div>
       </div>
 
       <div>
-        <div class="sh3" style="margin-top:0">📥 復元（インポート）</div>
+        <div class="sh3" style="margin-top:0">📥 復元（取り込み）</div>
         <div class="steps">
           <div class="step">
             <div class="step-n">1</div>
             <div class="step-body">
-              <h4>新しい端末・ブラウザでアプリを開く</h4>
-              <p>アプリURLを新端末で開きます。同梱データが自動投入されます。</p>
+              <h4>新しい端末で統合ホームを開く</h4>
+              <p>アプリURLを新端末で開き、ホーム画面を表示します。</p>
             </div>
           </div>
           <div class="step">
             <div class="step-n">2</div>
             <div class="step-body">
-              <h4>「学習履歴をインポート」をタップ</h4>
-              <p>設定画面でタップし、保存しておいたJSONファイルを選択します。</p>
-            </div>
-          </div>
-          <div class="step">
-            <div class="step-n">3</div>
-            <div class="step-body">
-              <h4>確認・完了</h4>
-              <p>「〇〇件の学習履歴を復元しました」と表示されれば成功です。レベル・復習スケジュール・メモすべて引き継がれます。</p>
+              <h4>「バックアップから復元」をタップ</h4>
+              <p>保存しておいたJSONファイルを選ぶと、全アプリのデータが復元されます。レベル・復習スケジュール・カルテなどがまとめて引き継がれます。</p>
             </div>
           </div>
         </div>
