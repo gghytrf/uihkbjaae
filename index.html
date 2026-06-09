@@ -20,7 +20,7 @@
     --indigo:#2c4a52; --gold:#a9824a; --line:#d8cdb6;
     --shadow:rgba(40,30,15,.18);
     /* 各アプリのテーマ色 */
-    --c-kokushi:#2c5f7c; --c-search:#d9820a; --c-bensho:#7a5c3e; --c-anki:#1f3a4d; --c-muscle:#5a5a22; --c-marubatsu:#1f6e7a;
+    --c-kokushi:#2c5f7c; --c-search:#d9820a; --c-bensho:#7a5c3e; --c-anki:#1f3a4d; --c-muscle:#5a5a22; --c-marubatsu:#1f6e7a; --c-karuta:#5a4a7a;
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{height:100%}
@@ -80,6 +80,7 @@
   .c-anki    .top{background:linear-gradient(135deg,var(--c-anki),#142838)}
   .c-muscle  .top{background:linear-gradient(135deg,var(--c-muscle),#3a3a16)}
   .c-marubatsu .top{background:linear-gradient(135deg,var(--c-marubatsu),#0f4651)}
+  .c-karuta  .top{background:linear-gradient(135deg,var(--c-karuta),#352a52)}
 
   .home-foot{margin-top:26px;display:flex;align-items:center;justify-content:space-between;
     flex-wrap:wrap;gap:10px;padding-top:16px;border-top:1px dashed var(--line)}
@@ -179,6 +180,12 @@
       <div class="go">ひらく <span class="arr">→</span></div>
     </button>
 
+    <button class="card c-karuta" onclick="openApp('karuta')">
+      <div class="top"><span class="glyph">聴</span><h2>経穴カルタ用音声</h2><div class="en">POINT KARUTA AUDIO</div></div>
+      <div class="desc">五行穴（井・榮・兪・経・合）などを読み上げ。経穴カルタの読み札・聞き取り練習に。</div>
+      <div class="go">ひらく <span class="arr">→</span></div>
+    </button>
+
     <button class="card c-bensho" onclick="openApp('bensho')">
       <div class="top"><span class="glyph">弁</span><h2>弁証支援</h2><div class="en">PATTERN ID</div></div>
       <div class="desc">問診から弁証鑑別・治療穴・徒手検査を提示し、カルテを管理する臨床補助ツール。</div>
@@ -261,6 +268,7 @@ const APPS = {
   search: { title:'選穴支援',  url:'apps/search/index.html',  bar:'#b5670a' },
   bensho: { title:'弁証支援',  url:'apps/bensho/index.html',  bar:'#7a5c3e' },
   anki:   { title:'暗記アプリ',  url:'apps/anki/index.html',    bar:'#1f3a4d' },
+  karuta: { title:'経穴カルタ用音声', url:'apps/karuta/index.html', bar:'#4a3a6a' },
   muscle: { title:'トレーニング検索',  url:'apps/muscle/index.html',  bar:'#3a3a1a' },
   marubatsu: { title:'国試〇×問題集', url:'apps/marubatsu/index.html', bar:'#1f5f6e' },
 };
