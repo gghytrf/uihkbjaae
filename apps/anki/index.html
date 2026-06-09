@@ -81,7 +81,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>暗記アプリ — 東洋医学学習アプリ</title>
-<meta name="description" content="経絡経穴・要穴・筋肉の暗記学習アプリ（正経十二経＋督脈・任脈／計361穴）">
+<meta name="description" content="経絡経穴・要穴・筋肉・脈管・神経の暗記学習アプリ（正経十二経＋督脈・任脈／計361穴）">
 <meta name="theme-color" content="#1f3a4d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -374,6 +374,29 @@
   .muscle-head{background:var(--jade);color:var(--paper);padding:10px 14px;font-family:'Shippori Mincho',serif;
     font-weight:800;font-size:calc(15px*var(--fs));display:flex;justify-content:space-between;align-items:center}
   .muscle-head .keiketu{font-size:calc(10px*var(--fs));font-weight:500;background:rgba(255,255,255,.2);padding:3px 9px;border-radius:12px;font-family:'Zen Kaku Gothic New'}
+  /* ===== 動脈・静脈・神経リスト ===== */
+  .vessel-note{font-size:calc(11px*var(--fs));color:#8a7d63;background:var(--paper2);border:1px dashed var(--line);border-radius:8px;padding:8px 11px;margin-bottom:12px;line-height:1.7}
+  .vessel-item{border:1px solid var(--line);border-radius:10px;margin-bottom:8px;overflow:hidden;background:var(--paper)}
+  .vessel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-family:'Shippori Mincho',serif;font-weight:700;color:var(--indigo);font-size:calc(14px*var(--fs))}
+  .vessel-head:hover{background:var(--paper2)}
+  .vessel-item .vcount{font-size:calc(11px*var(--fs));font-weight:500;color:var(--sub,#8a7d63);font-family:'Zen Kaku Gothic New';white-space:nowrap}
+  .vessel-item .vq{color:var(--gold,#c79a4b);font-weight:700;margin-left:4px}
+  .vessel-pts{padding:0 14px 12px;font-size:calc(13px*var(--fs));line-height:1.9;color:var(--ink,#3a2f1d);border-top:1px solid var(--line)}
+  /* ===== 高さ別 経穴表 ===== */
+  .level-switch{display:flex;gap:6px;margin-bottom:6px}
+  .level-switch button{flex:1;border:1px solid var(--line);background:#fff;border-radius:8px;padding:9px 6px;font-family:'Shippori Mincho',serif;font-weight:700;font-size:calc(13px*var(--fs));color:var(--indigo);cursor:pointer}
+  .level-switch button.on{background:var(--indigo);color:var(--paper);border-color:var(--indigo)}
+  .level-title{font-family:'Shippori Mincho',serif;font-weight:800;color:var(--indigo);font-size:calc(14px*var(--fs));margin:4px 0 8px;text-align:center}
+  .level-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table.level-tbl{border-collapse:collapse;table-layout:fixed;min-width:100%}
+  table.level-tbl th,table.level-tbl td{border:1px solid var(--line);padding:0;height:calc(38px*var(--fs));text-align:center;font-size:calc(12px*var(--fs));min-width:64px;white-space:nowrap}
+  table.level-tbl thead th{background:var(--indigo);color:var(--paper);font-family:'Shippori Mincho',serif;font-weight:700;position:sticky;top:0}
+  table.level-tbl th.lh,table.level-tbl td.lh{background:var(--paper2);color:var(--indigo);font-weight:700;position:sticky;left:0;z-index:1;min-width:88px}
+  table.level-tbl thead th.lh{background:var(--indigo);color:var(--paper);z-index:2}
+  table.level-tbl td.lcell{cursor:pointer;background:var(--paper);font-family:'Shippori Mincho',serif}
+  table.level-tbl td.lcell .lq{color:var(--gold,#c79a4b);font-weight:700}
+  table.level-tbl td.lcell.shown{background:var(--indigo);color:var(--paper)}
+  table.level-tbl td.lempty{background:#f3eee2}
   .mrow{display:grid;grid-template-columns:84px 1fr;border-bottom:1px solid var(--line);cursor:pointer;transition:background .15s;min-height:var(--mrow-h)}
   .mrow:last-child{border-bottom:none}
   .mrow:active{background:rgba(90,125,106,.08)}
@@ -402,11 +425,6 @@
   .ryaku-search{flex:1;border:1px solid var(--line);background:var(--paper);border-radius:9px;
     padding:9px 12px;font-size:calc(13px*var(--fs));font-family:'Zen Kaku Gothic New';color:var(--ink)}
   .ryaku-search:focus{outline:none;border-color:var(--indigo)}
-  .keiketsu-search-bar{display:flex;gap:8px;margin-bottom:14px}
-  .search-result-mer{display:inline-block;font-size:calc(9px*var(--fs));color:var(--paper);background:var(--jade);
-    font-weight:700;border-radius:7px;padding:2px 8px;position:absolute;top:14px;right:14px;letter-spacing:.05em;
-    font-family:'Zen Kaku Gothic New';max-width:46%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .card.has-merlabel .req-badge{top:38px}
   .ryaku-allbtn{border:1px solid var(--cinnabar);background:transparent;color:var(--cinnabar);border-radius:9px;
     padding:9px 14px;font-size:calc(12px*var(--fs));font-weight:700;cursor:pointer;white-space:nowrap;
     font-family:'Zen Kaku Gothic New';transition:.15s;flex:none}
@@ -474,7 +492,7 @@
     <p class="home-lead">学習したいコンテンツを選んでください</p>
     <div class="home-menu">
       <button class="home-card" data-go="viewGogyo"><span class="hc-icon">五</span><span class="hc-title">五行色体表</span><span class="hc-sub">自然界・人体・飲食物の五行配当</span></button>
-      <button class="home-card" data-go="viewKeiketsu"><span class="hc-icon">穴</span><span class="hc-title">経穴</span><span class="hc-sub">経絡経穴（361穴）・要穴表・骨度法・筋肉</span></button>
+      <button class="home-card" data-go="viewKeiketsu"><span class="hc-icon">穴</span><span class="hc-title">経穴</span><span class="hc-sub">経絡経穴（361穴）・要穴表・骨度法・筋肉・動脈・静脈・神経・高さ別</span></button>
       <button class="home-card" data-go="viewMyaku"><span class="hc-icon">脈</span><span class="hc-title">六部定位脈診・難経六十九難</span><span class="hc-sub">補母瀉子の本治法・経穴選定</span></button>
       <button class="home-card" data-go="viewNerve"><span class="hc-icon">脳</span><span class="hc-title">脳神経</span><span class="hc-sub">12対の脳神経とその働き</span></button>
       <button class="home-card" data-go="viewRyakugo"><span class="hc-icon">略</span><span class="hc-title">欧文略語</span><span class="hc-sub">国家試験出題基準の欧文略語集（全100語・2026年出題基準準拠）</span></button>
@@ -526,19 +544,17 @@
       <button data-tab="t2">要穴表<span class="en">KEY POINTS</span></button>
       <button data-tab="t4">骨度法<span class="en">BONE PROP.</span></button>
       <button data-tab="t3">筋肉<span class="en">MUSCLES</span></button>
+      <button data-tab="t5">動脈<span class="en">ARTERY</span></button>
+      <button data-tab="t6">静脈<span class="en">VEIN</span></button>
+      <button data-tab="t7">神経<span class="en">NERVE</span></button>
+      <button data-tab="t8">高さ別<span class="en">LEVELS</span></button>
     </nav>
     <section class="panel active" id="t1">
       <div class="view-toggle" id="viewToggle">
         <button class="on" data-view="card">カード（部位・取り方・解剖）</button>
         <button data-view="names">経穴名一覧</button>
       </div>
-      <div class="keiketsu-search-bar">
-        <input type="search" id="keiketsuSearch" class="ryaku-search" placeholder="🔍 全経穴を検索（経穴名・よみ・記号 例: 合谷 / ごうこく / LI4）" autocomplete="off">
-        <button class="ryaku-allbtn" id="keiketsuSearchClear" style="display:none">✕ クリア</button>
-      </div>
       <div class="meridian-pick" id="meridianPick"></div>
-      <p class="hint" id="hintSearch" style="display:none"></p>
-      <div class="list" id="searchResultList" style="display:none"></div>
       <p class="hint" id="hintCard">カードを<b>タップ</b>→経穴名　もう一度<b>タップ</b>→部位・取り方・解剖　再タップで戻る</p>
       <p class="hint" id="hintNames" style="display:none">経絡名の右の<b>？</b>を<b>タップ</b>で経穴名を一斉表示／各経穴名を<b>タップ</b>で個別に開閉</p>
       <div class="list" id="cardList"></div>
@@ -559,6 +575,30 @@
     <section class="panel" id="t3">
       <p class="hint">カテゴリ見出しを<b>タップ</b>で開閉／各行を<b>タップ</b>で起始→停止→作用→支配神経→経穴を順に表示</p>
       <div id="muscleArea"></div>
+    </section>
+    <section class="panel" id="t5">
+      <p class="hint">各動脈を<b>タップ</b>で、その動脈に関連する経穴（解剖の血管欄に記載）を表示します。多い順に並んでいます。</p>
+      <div id="arteryArea"></div>
+    </section>
+    <section class="panel" id="t6">
+      <p class="hint">各静脈を<b>タップ</b>で、その静脈に関連する経穴を表示します。</p>
+      <div class="vessel-note">※ 取り込み済みの経穴データでは、解剖欄に静脈が明記されている経穴がごく一部のため、ここに表示されるのは限られた経穴のみです。</div>
+      <div id="veinArea"></div>
+    </section>
+    <section class="panel" id="t7">
+      <p class="hint">各神経を<b>タップ</b>で、その神経（筋枝・皮枝）に関連する経穴を表示します。多い順に並んでいます。</p>
+      <div id="nerveArea"></div>
+    </section>
+    <section class="panel" id="t8">
+      <p class="hint">高さ（行）×正中線からの距離（列）で経穴を整理した表です。セルを<b>タップ</b>で <b>？</b>↔経穴名を切替。見出しの一括ボタンで全表示。</p>
+      <div class="level-switch" id="levelSwitch">
+        <button class="on" data-lv="chest">胸腹部（前面）</button>
+        <button data-lv="back">背部（後面）</button>
+      </div>
+      <div class="ryaku-ctrl" style="margin:10px 0;">
+        <button class="ryaku-allbtn" id="levelAll">すべて表示</button>
+      </div>
+      <div id="levelArea"></div>
     </section>
     <button class="back-btn" data-back>← ホームへ戻る</button>
   </section>
@@ -2246,43 +2286,390 @@ const gego={title:'下合穴',head:['腑','経穴'],rows:[
 /* ===== 筋肉 ===== */
 const muscleCats=[
  {cat:'上肢',muscles:[
-  {name:'上腕二頭筋',keiketu:'天府(LU3)・侠白(LU4)・尺沢(LU5)',rows:[
-   ['起始','長頭：肩甲骨関節上結節／短頭：肩甲骨烏口突起'],
-   ['停止','橈骨粗面、上腕二頭筋腱膜を介して前腕筋膜'],
-   ['作用','肘関節の屈曲、前腕の回外、肩関節の屈曲'],
-   ['支配神経','筋皮神経（C5・C6）']]},
-  {name:'腕橈骨筋',keiketu:'孔最(LU6)・列欠(LU7)・経渠(LU8)',rows:[
-   ['起始','上腕骨外側縁下部、外側上腕筋間中隔'],
-   ['停止','橈骨茎状突起'],
-   ['作用','肘関節の屈曲、前腕を中間位へ'],
-   ['支配神経','橈骨神経（C5・C6）']]},
-  {name:'長母指外転筋',keiketu:'列欠(LU7)・経渠(LU8)',rows:[
-   ['起始','尺骨・橈骨の背側面、前腕骨間膜'],
-   ['停止','第1中手骨底の橈側'],
-   ['作用','母指の外転、手関節の橈屈'],
-   ['支配神経','橈骨神経（後骨間神経 C7・C8）']]},
-  {name:'第1背側骨間筋',keiketu:'三間(LI3)・合谷(LI4)',rows:[
-   ['起始','第1・第2中手骨の相対する面'],
-   ['停止','示指基節骨底の橈側、指背腱膜'],
-   ['作用','示指の外転、MP屈曲・IP伸展'],
-   ['支配神経','尺骨神経（深枝 C8・T1）']]},
-  {name:'長・短橈側手根伸筋',keiketu:'偏歴(LI6)・温溜(LI7)・下廉(LI8)・上廉(LI9)・手三里(LI10)',rows:[
-   ['起始','長：上腕骨外側縁下部・外側上顆／短：上腕骨外側上顆'],
-   ['停止','長：第2中手骨底／短：第3中手骨底'],
-   ['作用','手関節の背屈・橈屈'],
-   ['支配神経','橈骨神経（C6・C7）']]},
-  {name:'三角筋',keiketu:'臂臑(LI14)・肩髃(LI15)',rows:[
-   ['起始','鎖骨外側1/3、肩峰、肩甲棘'],
+  {name:'三角筋',keiketu:'臂臑(LI14)・肩髃(LI15)・肩貞(SI9)・臑兪(SI10)・臑会(TE13)・肩髎(TE14)',rows:[
+   ['起始','鎖骨外側1/3・肩峰・肩甲棘'],
    ['停止','上腕骨三角筋粗面'],
    ['作用','前部：屈曲・内旋／中部：外転／後部：伸展・外旋'],
-   ['支配神経','腋窩神経（C5・C6）']]}
+   ['支配神経','腋窩神経（C5・C6）']
+  ]},
+  {name:'上腕二頭筋',keiketu:'天府(LU3)・侠白(LU4)・尺沢(LU5)・青霊(HT2)・天泉(PC2)・曲沢(PC3)',rows:[
+   ['起始','長頭：肩甲骨関節上結節／短頭：肩甲骨烏口突起'],
+   ['停止','橈骨粗面・上腕二頭筋腱膜'],
+   ['作用','肘関節の屈曲、前腕の回外、肩関節屈曲の補助'],
+   ['支配神経','筋皮神経（C5・C6）']
+  ]},
+  {name:'上腕筋',keiketu:'天府(LU3)・侠白(LU4)・尺沢(LU5)・青霊(HT2)・曲沢(PC3)',rows:[
+   ['起始','上腕骨遠位前面'],
+   ['停止','尺骨粗面・鈎状突起'],
+   ['作用','肘関節の屈曲'],
+   ['支配神経','筋皮神経（C5・C6）']
+  ]},
+  {name:'上腕三頭筋',keiketu:'手五里(LI13)・消濼(TE12)',rows:[
+   ['起始','長頭：肩甲骨関節下結節／外側頭・内側頭：上腕骨後面'],
+   ['停止','尺骨肘頭'],
+   ['作用','肘関節の伸展、長頭は肩関節の伸展'],
+   ['支配神経','橈骨神経（C6〜C8）']
+  ]},
+  {name:'腕橈骨筋',keiketu:'孔最(LU6)・列欠(LU7)・経渠(LU8)',rows:[
+   ['起始','上腕骨外側縁下部'],
+   ['停止','橈骨茎状突起'],
+   ['作用','肘関節の屈曲、前腕を中間位へ'],
+   ['支配神経','橈骨神経（C5・C6）']
+  ]},
+  {name:'円回内筋',keiketu:'少海(HT3)',rows:[
+   ['起始','上腕骨内側上顆・尺骨鈎状突起'],
+   ['停止','橈骨外側面中央'],
+   ['作用','前腕の回内、肘関節屈曲の補助'],
+   ['支配神経','正中神経（C6・C7）']
+  ]},
+  {name:'橈側手根屈筋',keiketu:'少海(HT3)・郄門(PC4)・間使(PC5)・内関(PC6)・大陵(PC7)',rows:[
+   ['起始','上腕骨内側上顆'],
+   ['停止','第2・第3中手骨底'],
+   ['作用','手関節の掌屈・橈屈'],
+   ['支配神経','正中神経（C6・C7）']
+  ]},
+  {name:'尺側手根屈筋',keiketu:'霊道(HT4)・通里(HT5)・陰郄(HT6)・神門(HT7)・支正(SI7)・小海(SI8)',rows:[
+   ['起始','上腕骨内側上顆・尺骨後面'],
+   ['停止','豆状骨・有鈎骨・第5中手骨底'],
+   ['作用','手関節の掌屈・尺屈'],
+   ['支配神経','尺骨神経（C7〜T1）']
+  ]},
+  {name:'長掌筋',keiketu:'少海(HT3)・郄門(PC4)・間使(PC5)・内関(PC6)・大陵(PC7)',rows:[
+   ['起始','上腕骨内側上顆'],
+   ['停止','手掌腱膜'],
+   ['作用','手関節の掌屈、手掌腱膜の緊張'],
+   ['支配神経','正中神経（C7・C8）']
+  ]},
+  {name:'浅指屈筋',keiketu:'郄門(PC4)・間使(PC5)・内関(PC6)・大陵(PC7)・労宮(PC8)',rows:[
+   ['起始','上腕骨内側上顆・尺骨・橈骨前面'],
+   ['停止','第2〜5指中節骨底'],
+   ['作用','第2〜5指PIP関節・手関節の屈曲'],
+   ['支配神経','正中神経（C7〜T1）']
+  ]},
+  {name:'深指屈筋',keiketu:'霊道(HT4)・通里(HT5)・陰郄(HT6)・神門(HT7)',rows:[
+   ['起始','尺骨前面・前腕骨間膜'],
+   ['停止','第2〜5指末節骨底'],
+   ['作用','第2〜5指DIP関節・手関節の屈曲'],
+   ['支配神経','橈側半：正中神経／尺側半：尺骨神経（C7〜T1）']
+  ]},
+  {name:'長橈側手根伸筋',keiketu:'温溜(LI7)・下廉(LI8)・上廉(LI9)・手三里(LI10)・曲池(LI11)・肘髎(LI12)',rows:[
+   ['起始','上腕骨外側縁下部'],
+   ['停止','第2中手骨底'],
+   ['作用','手関節の背屈・橈屈'],
+   ['支配神経','橈骨神経（C6・C7）']
+  ]},
+  {name:'短橈側手根伸筋',keiketu:'温溜(LI7)・下廉(LI8)・上廉(LI9)・手三里(LI10)・曲池(LI11)',rows:[
+   ['起始','上腕骨外側上顆'],
+   ['停止','第3中手骨底'],
+   ['作用','手関節の背屈・橈屈'],
+   ['支配神経','橈骨神経（C6・C7）']
+  ]},
+  {name:'尺側手根伸筋',keiketu:'陽谷(SI5)・会宗(TE7)',rows:[
+   ['起始','上腕骨外側上顆・尺骨後面'],
+   ['停止','第5中手骨底'],
+   ['作用','手関節の背屈・尺屈'],
+   ['支配神経','橈骨神経（後骨間神経 C7・C8）']
+  ]},
+  {name:'総指伸筋',keiketu:'陽池(TE4)・外関(TE5)・支溝(TE6)・三陽絡(TE8)・四瀆(TE9)',rows:[
+   ['起始','上腕骨外側上顆'],
+   ['停止','第2〜5指の指背腱膜'],
+   ['作用','第2〜5指・手関節の伸展'],
+   ['支配神経','橈骨神経（後骨間神経 C7・C8）']
+  ]},
+  {name:'小指伸筋',keiketu:'陽池(TE4)・外関(TE5)・支溝(TE6)・会宗(TE7)・三陽絡(TE8)・四瀆(TE9)',rows:[
+   ['起始','上腕骨外側上顆'],
+   ['停止','小指の指背腱膜'],
+   ['作用','小指の伸展'],
+   ['支配神経','橈骨神経（後骨間神経 C7・C8）']
+  ]},
+  {name:'長母指外転筋',keiketu:'列欠(LU7)・経渠(LU8)・偏歴(LI6)',rows:[
+   ['起始','尺骨・橈骨背側面・前腕骨間膜'],
+   ['停止','第1中手骨底橈側'],
+   ['作用','母指の外転、手関節の橈屈'],
+   ['支配神経','橈骨神経（後骨間神経 C7・C8）']
+  ]},
+  {name:'短母指伸筋',keiketu:'列欠(LU7)・陽渓(LI5)・衝陽(ST42)',rows:[
+   ['起始','橈骨背側面・前腕骨間膜'],
+   ['停止','母指基節骨底'],
+   ['作用','母指MP関節の伸展'],
+   ['支配神経','橈骨神経（後骨間神経 C7・C8）']
+  ]},
+  {name:'長母指伸筋',keiketu:'陽渓(LI5)・解渓(ST41)',rows:[
+   ['起始','尺骨背側面・前腕骨間膜'],
+   ['停止','母指末節骨底'],
+   ['作用','母指IP関節の伸展'],
+   ['支配神経','橈骨神経（後骨間神経 C7・C8）']
+  ]},
+  {name:'第1背側骨間筋',keiketu:'二間(LI2)・三間(LI3)・合谷(LI4)・太衝(LR3)',rows:[
+   ['起始','第1・第2中手骨の相対する面'],
+   ['停止','示指基節骨底橈側・指背腱膜'],
+   ['作用','示指の外転'],
+   ['支配神経','尺骨神経（深枝 C8・T1）']
+  ]},
+  {name:'小指外転筋',keiketu:'後渓(SI3)・腕骨(SI4)・京骨(BL64)・束骨(BL65)',rows:[
+   ['起始','豆状骨'],
+   ['停止','小指基節骨底尺側'],
+   ['作用','小指の外転'],
+   ['支配神経','尺骨神経（深枝 C8・T1）']
+  ]},
+  {name:'母指外転筋',keiketu:'太白(SP3)・公孫(SP4)',rows:[
+   ['起始','屈筋支帯・舟状骨結節'],
+   ['停止','母指基節骨底橈側'],
+   ['作用','母指の外転'],
+   ['支配神経','正中神経（C8・T1）']
+  ]},
+  {name:'小円筋',keiketu:'肩貞(SI9)',rows:[
+   ['起始','肩甲骨外側縁'],
+   ['停止','上腕骨大結節'],
+   ['作用','肩関節の外旋'],
+   ['支配神経','腋窩神経（C5・C6）']
+  ]},
+  {name:'棘下筋',keiketu:'天宗(SI11)',rows:[
+   ['起始','肩甲骨棘下窩'],
+   ['停止','上腕骨大結節'],
+   ['作用','肩関節の外旋'],
+   ['支配神経','肩甲上神経（C5・C6）']
+  ]},
+  {name:'前鋸筋',keiketu:'大包(SP21)・淵腋(GB22)・輒筋(GB23)',rows:[
+   ['起始','第1〜9肋骨外側面'],
+   ['停止','肩甲骨内側縁（肋骨面）'],
+   ['作用','肩甲骨の前方移動・上方回旋'],
+   ['支配神経','長胸神経（C5〜C7）']
+  ]}
  ]},
- {cat:'頸部',muscles:[
-  {name:'胸鎖乳突筋',keiketu:'天鼎(LI17)・扶突(LI18)',rows:[
-   ['起始','胸骨頭：胸骨柄前面／鎖骨頭：鎖骨内側1/3'],
-   ['停止','側頭骨乳様突起、後頭骨上項線'],
-   ['作用','片側：同側へ側屈し顔を反対へ回旋／両側：頭部の前屈'],
-   ['支配神経','副神経・頸神経叢の枝（C2・C3）']]}
+ {cat:'頸部・頭部',muscles:[
+  {name:'胸鎖乳突筋',keiketu:'天容(SI17)・天牖(TE16)・完骨(GB12)・風池(GB20)',rows:[
+   ['起始','胸骨柄前面・鎖骨内側1/3'],
+   ['停止','側頭骨乳様突起・後頭骨上項線'],
+   ['作用','片側：同側へ側屈し顔を反対へ回旋／両側：頭部前屈'],
+   ['支配神経','副神経・頸神経叢の枝（C2・C3）']
+  ]},
+  {name:'広頸筋',keiketu:'天鼎(LI17)・扶突(LI18)・大迎(ST5)・人迎(ST9)・水突(ST10)・気舎(ST11)・欠盆(ST12)・気戸(ST13)・天窓(SI16)・彧中(KI26)・兪府(KI27)',rows:[
+   ['起始','胸部上方の皮下（大胸筋・三角筋筋膜）'],
+   ['停止','下顎・口角の皮膚'],
+   ['作用','頸部の皮膚を緊張させる、口角を下制'],
+   ['支配神経','顔面神経（頸枝）']
+  ]},
+  {name:'前頭筋',keiketu:'頭維(ST8)・攅竹(BL2)・眉衝(BL3)・曲差(BL4)・本神(GB13)・陽白(GB14)・頭臨泣(GB15)・上星(GV23)・神庭(GV24)',rows:[
+   ['起始','帽状腱膜'],
+   ['停止','眉部の皮膚'],
+   ['作用','眉を上げる、額に横皺'],
+   ['支配神経','顔面神経（側頭枝）']
+  ]},
+  {name:'後頭筋',keiketu:'玉枕(BL9)・浮白(GB10)・頭竅陰(GB11)・脳空(GB19)・脳戸(GV17)',rows:[
+   ['起始','後頭骨上項線'],
+   ['停止','帽状腱膜'],
+   ['作用','頭皮を後方へ引く'],
+   ['支配神経','顔面神経（後耳介枝）']
+  ]},
+  {name:'眼輪筋',keiketu:'承泣(ST1)・四白(ST2)・攅竹(BL2)・糸竹空(TE23)・瞳子髎(GB1)',rows:[
+   ['起始','眼窩内側縁・内側眼瞼靱帯'],
+   ['停止','眼瞼の皮膚'],
+   ['作用','眼を閉じる'],
+   ['支配神経','顔面神経（側頭枝・頬骨枝）']
+  ]},
+  {name:'口輪筋',keiketu:'禾髎(LI19)・地倉(ST4)・水溝(GV26)・兌端(GV27)・承漿(CV24)',rows:[
+   ['起始','口周囲の筋・皮膚'],
+   ['停止','口唇の皮膚'],
+   ['作用','口を閉じる・突き出す'],
+   ['支配神経','顔面神経（頬筋枝・下顎縁枝）']
+  ]},
+  {name:'咬筋',keiketu:'頬車(ST6)・下関(ST7)',rows:[
+   ['起始','頬骨弓'],
+   ['停止','下顎枝・咬筋粗面'],
+   ['作用','下顎の挙上（噛みしめ）'],
+   ['支配神経','下顎神経（三叉神経第3枝）']
+  ]},
+  {name:'側頭筋',keiketu:'上関(GB3)',rows:[
+   ['起始','側頭窩'],
+   ['停止','下顎骨筋突起'],
+   ['作用','下顎の挙上・後退'],
+   ['支配神経','下顎神経（三叉神経第3枝）']
+  ]}
+ ]},
+ {cat:'体幹',muscles:[
+  {name:'腹直筋',keiketu:'不容(ST19)・承満(ST20)・梁門(ST21)・関門(ST22)・太乙(ST23)・滑肉門(ST24)・天枢(ST25)・外陵(ST26)・大巨(ST27)・水道(ST28)・帰来(ST29)・横骨(KI11)・大赫(KI12)・気穴(KI13)・四満(KI14)・中注(KI15)・肓兪(KI16)・商曲(KI17)・石関(KI18)・陰都(KI19)・腹通谷(KI20)・幽門(KI21)',rows:[
+   ['起始','恥骨結合・恥骨稜'],
+   ['停止','第5〜7肋軟骨・剣状突起'],
+   ['作用','体幹の屈曲、腹圧の上昇'],
+   ['支配神経','肋間神経（T5〜T12）']
+  ]},
+  {name:'錐体筋',keiketu:'横骨(KI11)',rows:[
+   ['起始','恥骨'],
+   ['停止','白線'],
+   ['作用','白線を緊張させる'],
+   ['支配神経','肋間神経（T12）']
+  ]},
+  {name:'外腹斜筋',keiketu:'帰来(ST29)・気衝(ST30)・府舎(SP13)・腹結(SP14)・大横(SP15)・腹哀(SP16)・帯脈(GB26)・五枢(GB27)・維道(GB28)・急脈(LR12)・章門(LR13)',rows:[
+   ['起始','第5〜12肋骨外面'],
+   ['停止','腸骨稜・鼠径靱帯・白線'],
+   ['作用','体幹の屈曲・回旋（反対側）'],
+   ['支配神経','肋間神経（T5〜T12）']
+  ]},
+  {name:'内腹斜筋',keiketu:'帰来(ST29)・気衝(ST30)・府舎(SP13)・腹結(SP14)・大横(SP15)・腹哀(SP16)・帯脈(GB26)・五枢(GB27)・維道(GB28)・章門(LR13)',rows:[
+   ['起始','胸腰筋膜・腸骨稜・鼠径靱帯'],
+   ['停止','第10〜12肋骨・白線'],
+   ['作用','体幹の屈曲・回旋（同側）'],
+   ['支配神経','肋間神経・腸骨下腹神経（T8〜L1）']
+  ]},
+  {name:'広背筋',keiketu:'膈関(BL46)・魂門(BL47)・陽綱(BL48)・意舎(BL49)・胃倉(BL50)・肓門(BL51)・志室(BL52)・京門(GB25)',rows:[
+   ['起始','下位胸椎〜腰椎棘突起・腸骨稜・下位肋骨（胸腰筋膜）'],
+   ['停止','上腕骨小結節稜'],
+   ['作用','肩関節の伸展・内転・内旋'],
+   ['支配神経','胸背神経（C6〜C8）']
+  ]},
+  {name:'僧帽筋',keiketu:'巨骨(LI16)・秉風(SI12)・曲垣(SI13)・肩外兪(SI14)・肩中兪(SI15)・天柱(BL10)・大杼(BL11)・風門(BL12)・肺兪(BL13)・厥陰兪(BL14)・心兪(BL15)・督兪(BL16)・膈兪(BL17)・肝兪(BL18)・附分(BL41)・魄戸(BL42)・膏肓(BL43)・神堂(BL44)・天髎(TE15)・風池(GB20)・肩井(GB21)',rows:[
+   ['起始','後頭骨・項靱帯・C7〜T12棘突起'],
+   ['停止','鎖骨外側1/3・肩峰・肩甲棘'],
+   ['作用','肩甲骨の挙上・内転・上方回旋'],
+   ['支配神経','副神経・頸神経叢の枝（C2〜C4）']
+  ]},
+  {name:'菱形筋',keiketu:'譩譆(BL45)',rows:[
+   ['起始','C7〜T5棘突起・項靱帯'],
+   ['停止','肩甲骨内側縁'],
+   ['作用','肩甲骨の内転・挙上'],
+   ['支配神経','肩甲背神経（C4・C5）']
+  ]},
+  {name:'脊柱起立筋',keiketu:'—',rows:[
+   ['起始','仙骨・腸骨稜・腰椎棘突起・胸腰筋膜'],
+   ['停止','肋骨・椎骨・後頭骨'],
+   ['作用','脊柱の伸展、片側で側屈'],
+   ['支配神経','脊髄神経後枝']
+  ]}
+ ]},
+ {cat:'下肢',muscles:[
+  {name:'腸腰筋',keiketu:'衝門(SP12)',rows:[
+   ['起始','腸骨窩・腰椎椎体・横突起'],
+   ['停止','大腿骨小転子'],
+   ['作用','股関節の屈曲'],
+   ['支配神経','大腿神経・腰神経叢（L1〜L4）']
+  ]},
+  {name:'大殿筋',keiketu:'中膂兪(BL29)・白環兪(BL30)・会陽(BL35)・承扶(BL36)・胞肓(BL53)・秩辺(BL54)・環跳(GB30)',rows:[
+   ['起始','腸骨翼後面・仙骨・尾骨・仙結節靱帯'],
+   ['停止','腸脛靱帯・大腿骨殿筋粗面'],
+   ['作用','股関節の伸展・外旋'],
+   ['支配神経','下殿神経（L5〜S2）']
+  ]},
+  {name:'中殿筋',keiketu:'居髎(GB29)',rows:[
+   ['起始','腸骨翼外面'],
+   ['停止','大腿骨大転子'],
+   ['作用','股関節の外転、前部で内旋'],
+   ['支配神経','上殿神経（L4〜S1）']
+  ]},
+  {name:'大腿筋膜張筋',keiketu:'居髎(GB29)',rows:[
+   ['起始','上前腸骨棘'],
+   ['停止','腸脛靱帯'],
+   ['作用','股関節の屈曲・外転・内旋'],
+   ['支配神経','上殿神経（L4・L5）']
+  ]},
+  {name:'大腿直筋',keiketu:'髀関(ST31)・伏兎(ST32)',rows:[
+   ['起始','下前腸骨棘'],
+   ['停止','膝蓋骨〜脛骨粗面（膝蓋腱）'],
+   ['作用','膝関節の伸展、股関節の屈曲'],
+   ['支配神経','大腿神経（L2〜L4）']
+  ]},
+  {name:'内側広筋',keiketu:'血海(SP10)',rows:[
+   ['起始','大腿骨粗線内側唇'],
+   ['停止','膝蓋骨〜脛骨粗面'],
+   ['作用','膝関節の伸展'],
+   ['支配神経','大腿神経（L2〜L4）']
+  ]},
+  {name:'外側広筋',keiketu:'伏兎(ST32)・陰市(ST33)・梁丘(ST34)',rows:[
+   ['起始','大腿骨粗線外側唇・大転子'],
+   ['停止','膝蓋骨〜脛骨粗面'],
+   ['作用','膝関節の伸展'],
+   ['支配神経','大腿神経（L2〜L4）']
+  ]},
+  {name:'縫工筋',keiketu:'髀関(ST31)・箕門(SP11)・陰包(LR9)',rows:[
+   ['起始','上前腸骨棘'],
+   ['停止','脛骨粗面内側（鵞足）'],
+   ['作用','股関節の屈曲・外転・外旋、膝関節の屈曲'],
+   ['支配神経','大腿神経（L2・L3）']
+  ]},
+  {name:'恥骨筋',keiketu:'足五里(LR10)・陰廉(LR11)',rows:[
+   ['起始','恥骨櫛'],
+   ['停止','大腿骨恥骨筋線'],
+   ['作用','股関節の屈曲・内転'],
+   ['支配神経','大腿神経・閉鎖神経（L2・L3）']
+  ]},
+  {name:'薄筋',keiketu:'膝関(LR7)・曲泉(LR8)',rows:[
+   ['起始','恥骨下枝'],
+   ['停止','脛骨粗面内側（鵞足）'],
+   ['作用','股関節の内転、膝関節の屈曲'],
+   ['支配神経','閉鎖神経（L2・L3）']
+  ]},
+  {name:'半腱様筋',keiketu:'陰陵泉(SP9)・殷門(BL37)・陰谷(KI10)',rows:[
+   ['起始','坐骨結節'],
+   ['停止','脛骨粗面内側（鵞足）'],
+   ['作用','膝関節の屈曲、股関節の伸展'],
+   ['支配神経','脛骨神経（坐骨神経 L5〜S2）']
+  ]},
+  {name:'大腿二頭筋長頭',keiketu:'殷門(BL37)・浮郄(BL38)・委陽(BL39)',rows:[
+   ['起始','坐骨結節'],
+   ['停止','腓骨頭'],
+   ['作用','膝関節の屈曲、股関節の伸展'],
+   ['支配神経','脛骨神経（坐骨神経 L5〜S2）']
+  ]},
+  {name:'前脛骨筋',keiketu:'足三里(ST36)・上巨虚(ST37)・条口(ST38)・下巨虚(ST39)・豊隆(ST40)・中封(LR4)',rows:[
+   ['起始','脛骨外側面・下腿骨間膜'],
+   ['停止','内側楔状骨・第1中足骨底'],
+   ['作用','足関節の背屈・内反'],
+   ['支配神経','深腓骨神経（L4〜S1）']
+  ]},
+  {name:'長指伸筋',keiketu:'豊隆(ST40)・解渓(ST41)・衝陽(ST42)・丘墟(GB40)',rows:[
+   ['起始','脛骨外側顆・腓骨前面・下腿骨間膜'],
+   ['停止','第2〜5趾の趾背腱膜'],
+   ['作用','第2〜5趾の伸展、足関節の背屈'],
+   ['支配神経','深腓骨神経（L4〜S1）']
+  ]},
+  {name:'長母指伸筋',keiketu:'陽渓(LI5)・解渓(ST41)',rows:[
+   ['起始','腓骨前面・下腿骨間膜'],
+   ['停止','母趾末節骨底'],
+   ['作用','母趾の伸展、足関節の背屈'],
+   ['支配神経','深腓骨神経（L4〜S1）']
+  ]},
+  {name:'長腓骨筋',keiketu:'申脈(BL62)・金門(BL63)・陽陵泉(GB34)・陽交(GB35)・外丘(GB36)・光明(GB37)',rows:[
+   ['起始','腓骨頭・腓骨外側面'],
+   ['停止','内側楔状骨・第1中足骨底'],
+   ['作用','足関節の底屈・外反'],
+   ['支配神経','浅腓骨神経（L5〜S1）']
+  ]},
+  {name:'短腓骨筋',keiketu:'跗陽(BL59)・申脈(BL62)・金門(BL63)・光明(GB37)・陽輔(GB38)・懸鍾(GB39)',rows:[
+   ['起始','腓骨外側面下部'],
+   ['停止','第5中足骨粗面'],
+   ['作用','足関節の底屈・外反'],
+   ['支配神経','浅腓骨神経（L5〜S1）']
+  ]},
+  {name:'腓腹筋',keiketu:'陰陵泉(SP9)・合陽(BL55)・承筋(BL56)・承山(BL57)・飛揚(BL58)',rows:[
+   ['起始','内側頭：大腿骨内側上顆／外側頭：大腿骨外側上顆'],
+   ['停止','踵骨隆起（アキレス腱）'],
+   ['作用','足関節の底屈、膝関節の屈曲'],
+   ['支配神経','脛骨神経（S1・S2）']
+  ]},
+  {name:'ヒラメ筋',keiketu:'地機(SP8)・飛揚(BL58)・復溜(KI7)・築賓(KI9)',rows:[
+   ['起始','腓骨頭・ヒラメ筋線'],
+   ['停止','踵骨隆起（アキレス腱）'],
+   ['作用','足関節の底屈'],
+   ['支配神経','脛骨神経（S1・S2）']
+  ]},
+  {name:'後脛骨筋',keiketu:'三陰交(SP6)・漏谷(SP7)・然谷(KI2)・照海(KI6)・交信(KI8)',rows:[
+   ['起始','脛骨・腓骨後面・下腿骨間膜'],
+   ['停止','舟状骨・楔状骨・第2〜4中足骨底'],
+   ['作用','足関節の底屈・内反'],
+   ['支配神経','脛骨神経（L4・L5）']
+  ]},
+  {name:'長指屈筋',keiketu:'三陰交(SP6)・漏谷(SP7)・地機(SP8)・太渓(KI3)・照海(KI6)・復溜(KI7)・交信(KI8)',rows:[
+   ['起始','脛骨後面'],
+   ['停止','第2〜5趾末節骨底'],
+   ['作用','第2〜5趾の屈曲、足関節の底屈'],
+   ['支配神経','脛骨神経（L5〜S2）']
+  ]},
+  {name:'小指外転筋',keiketu:'後渓(SI3)・腕骨(SI4)・京骨(BL64)・束骨(BL65)',rows:[
+   ['起始','踵骨隆起'],
+   ['停止','小趾基節骨底'],
+   ['作用','小趾の外転'],
+   ['支配神経','外側足底神経（S1〜S3）']
+  ]}
  ]}
 ];
 
@@ -2497,11 +2884,262 @@ function renderMuscles(){
     };
   });
 }
+
+/* ===================== 動脈・静脈・神経（経穴の解剖データ由来）===================== */
+const kpArteryData=[
+  {name:'肋間動脈',pts:'庫房(ST14)・屋翳(ST15)・膺窓(ST16)・乳中(ST17)・乳根(ST18)・不容(ST19)・食竇(SP17)・天渓(SP18)・胸郷(SP19)・周栄(SP20)・大包(SP21)・商曲(KI17)・石関(KI18)・陰都(KI19)・腹通谷(KI20)・幽門(KI21)・天池(PC1)・淵腋(GB22)・輒筋(GB23)・日月(GB24)・京門(GB25)・帯脈(GB26)・章門(LR13)・期門(LR14)'},
+  {name:'上腹壁動脈',pts:'不容(ST19)・承満(ST20)・梁門(ST21)・関門(ST22)・太乙(ST23)・滑肉門(ST24)・天枢(ST25)・大横(SP15)・腹哀(SP16)・肓兪(KI16)・商曲(KI17)・石関(KI18)・陰都(KI19)・腹通谷(KI20)・幽門(KI21)・神闕(CV8)・水分(CV9)・下脘(CV10)・建里(CV11)・中脘(CV12)・上脘(CV13)・巨闕(CV14)・鳩尾(CV15)'},
+  {name:'下腹壁動脈',pts:'天枢(ST25)・外陵(ST26)・大巨(ST27)・水道(ST28)・帰来(ST29)・気衝(ST30)・府舎(SP13)・腹結(SP14)・大横(SP15)・横骨(KI11)・大赫(KI12)・気穴(KI13)・四満(KI14)・中注(KI15)・肓兪(KI16)・急脈(LR12)・曲骨(CV2)・中極(CV3)・関元(CV4)・石門(CV5)・気海(CV6)・陰交(CV7)・神闕(CV8)'},
+  {name:'浅腹壁動脈',pts:'天枢(ST25)・外陵(ST26)・大巨(ST27)・水道(ST28)・帰来(ST29)・気衝(ST30)・府舎(SP13)・腹結(SP14)・大横(SP15)・横骨(KI11)・大赫(KI12)・気穴(KI13)・四満(KI14)・中注(KI15)・肓兪(KI16)・急脈(LR12)・曲骨(CV2)・中極(CV3)・関元(CV4)・石門(CV5)・気海(CV6)・陰交(CV7)・神闕(CV8)'},
+  {name:'背側指動脈',pts:'商陽(LI1)・二間(LI2)・三間(LI3)・内庭(ST44)・厲兌(ST45)・隠白(SP1)・大都(SP2)・少衝(HT9)・少沢(SI1)・前谷(SI2)・後渓(SI3)・腕骨(SI4)・束骨(BL65)・足通谷(BL66)・至陰(BL67)・中衝(PC9)・関衝(TE1)・液門(TE2)・中渚(TE3)・侠渓(GB43)・足竅陰(GB44)・大敦(LR1)・行間(LR2)'},
+  {name:'胸肩峰動脈',pts:'中府(LU1)・雲門(LU2)・庫房(ST14)・屋翳(ST15)・膺窓(ST16)・乳中(ST17)・乳根(ST18)・食竇(SP17)・天渓(SP18)・胸郷(SP19)・周栄(SP20)・歩廊(KI22)・神封(KI23)・霊墟(KI24)・神蔵(KI25)・彧中(KI26)・兪府(KI27)・天池(PC1)・期門(LR14)'},
+  {name:'眼窩上動脈',pts:'眉衝(BL3)・曲差(BL4)・五処(BL5)・承光(BL6)・通天(BL7)・本神(GB13)・陽白(GB14)・頭臨泣(GB15)・目窓(GB16)・正営(GB17)・承霊(GB18)・百会(GV20)・前頂(GV21)・顖会(GV22)・上星(GV23)・神庭(GV24)'},
+  {name:'後脛骨動脈',pts:'三陰交(SP6)・漏谷(SP7)・地機(SP8)・合陽(BL55)・承筋(BL56)・承山(BL57)・太渓(KI3)・大鍾(KI4)・照海(KI6)・復溜(KI7)・交信(KI8)・築賓(KI9)'},
+  {name:'後頭動脈',pts:'天容(SI17)・絡却(BL8)・玉枕(BL9)・天柱(BL10)・完骨(GB12)・承霊(GB18)・脳空(GB19)・風府(GV16)・脳戸(GV17)・強間(GV18)・後頂(GV19)・百会(GV20)'},
+  {name:'橈骨動脈',pts:'孔最(LU6)・列欠(LU7)・経渠(LU8)・太淵(LU9)・陽渓(LI5)・偏歴(LI6)・温溜(LI7)・下廉(LI8)・上廉(LI9)・手三里(LI10)'},
+  {name:'外側胸動脈',pts:'中府(LU1)・雲門(LU2)・食竇(SP17)・天渓(SP18)・胸郷(SP19)・周栄(SP20)・天池(PC1)・淵腋(GB22)・輒筋(GB23)'},
+  {name:'浅側頭動脈',pts:'頬車(ST6)・頭維(ST8)・聴宮(SI19)・耳門(TE21)・和髎(TE22)・糸竹空(TE23)・聴会(GB2)・曲鬢(GB7)・百会(GV20)'},
+  {name:'外側仙骨動脈',pts:'小腸兪(BL27)・膀胱兪(BL28)・中膂兪(BL29)・白環兪(BL30)・上髎(BL31)・次髎(BL32)・中髎(BL33)・下髎(BL34)'},
+  {name:'頸横動脈',pts:'曲垣(SI13)・肩外兪(SI14)・肩中兪(SI15)・附分(BL41)・魄戸(BL42)・膏肓(BL43)・神堂(BL44)・肩井(GB21)'},
+  {name:'内胸動脈',pts:'歩廊(KI22)・神封(KI23)・霊墟(KI24)・神蔵(KI25)・彧中(KI26)・兪府(KI27)'},
+  {name:'前脛骨動脈',pts:'足三里(ST36)・上巨虚(ST37)・条口(ST38)・下巨虚(ST39)・豊隆(ST40)・解渓(ST41)'},
+  {name:'下殿動脈',pts:'承扶(BL36)・胞肓(BL53)・秩辺(BL54)・環跳(GB30)・腰兪(GV2)'},
+  {name:'大腿動脈',pts:'気衝(ST30)・箕門(SP11)・衝門(SP12)・足五里(LR10)・陰廉(LR11)'},
+  {name:'後耳介動脈',pts:'翳風(TE17)・瘈脈(TE18)・顱息(TE19)・浮白(GB10)・頭竅陰(GB11)'},
+  {name:'後骨間動脈',pts:'外関(TE5)・支溝(TE6)・会宗(TE7)・三陽絡(TE8)・四瀆(TE9)'},
+  {name:'滑車上動脈',pts:'攅竹(BL2)・眉衝(BL3)・曲差(BL4)・上星(GV23)・神庭(GV24)'},
+  {name:'肩甲上動脈',pts:'巨骨(LI16)・臑兪(SI10)・天宗(SI11)・秉風(SI12)・曲垣(SI13)'},
+  {name:'上殿動脈',pts:'胞肓(BL53)・秩辺(BL54)・居髎(GB29)・環跳(GB30)'},
+  {name:'内側下膝動脈',pts:'陰陵泉(SP9)・陰谷(KI10)・膝関(LR7)・曲泉(LR8)'},
+  {name:'外側大腿回旋動脈',pts:'髀関(ST31)・伏兎(ST32)・陰市(ST33)・梁丘(ST34)'},
+  {name:'尺骨動脈',pts:'霊道(HT4)・通里(HT5)・陰郄(HT6)・神門(HT7)'},
+  {name:'後上腕回旋動脈',pts:'肩貞(SI9)・臑兪(SI10)・臑会(TE13)・肩髎(TE14)'},
+  {name:'眼窩下動脈',pts:'承泣(ST1)・四白(ST2)・巨髎(ST3)・顴髎(SI18)'},
+  {name:'上唇動脈',pts:'禾髎(LI19)・水溝(GV26)・兌端(GV27)'},
+  {name:'上腕動脈',pts:'青霊(HT2)・天泉(PC2)・曲沢(PC3)'},
+  {name:'前骨間動脈',pts:'郄門(PC4)・間使(PC5)・内関(PC6)'},
+  {name:'外側上膝動脈',pts:'梁丘(ST34)・委陽(BL39)・膝陽関(GB33)'},
+  {name:'総頸動脈',pts:'人迎(ST9)・水突(ST10)・気舎(ST11)'},
+  {name:'胸背動脈',pts:'大包(SP21)・淵腋(GB22)・輒筋(GB23)'},
+  {name:'腓骨動脈',pts:'飛揚(BL58)・跗陽(BL59)・崑崙(BL60)'},
+  {name:'顔面動脈',pts:'地倉(ST4)・大迎(ST5)・素髎(GV25)'},
+  {name:'前内果動脈',pts:'商丘(SP5)・中封(LR4)'},
+  {name:'浅腸骨回旋動脈',pts:'五枢(GB27)・維道(GB28)'},
+  {name:'浅頸動脈',pts:'天窓(SI16)・天牖(TE16)'},
+  {name:'深腸骨回旋動脈',pts:'五枢(GB27)・維道(GB28)'},
+  {name:'眼角動脈',pts:'迎香(LI20)・睛明(BL1)'},
+  {name:'第4背側中足動脈',pts:'足臨泣(GB41)・地五会(GB42)'},
+  {name:'総掌側指動脈',pts:'少府(HT8)・労宮(PC8)'},
+  {name:'肩甲回旋動脈',pts:'肩貞(SI9)・天宗(SI11)'},
+  {name:'腋窩動脈',pts:'気戸(ST13)・極泉(HT1)'},
+  {name:'貫通動脈',pts:'殷門(BL37)・浮郄(BL38)'},
+  {name:'足背動脈',pts:'衝陽(ST42)・太衝(LR3)'},
+  {name:'顔面横動脈',pts:'下関(ST7)・顴髎(SI18)'},
+  {name:'上甲状腺動脈',pts:'廉泉(CV23)'},
+  {name:'上腕深動脈',pts:'手五里(LI13)'},
+  {name:'上行頸動脈',pts:'天鼎(LI17)'},
+  {name:'下唇動脈',pts:'承漿(CV24)'},
+  {name:'下甲状腺動脈',pts:'天突(CV22)'},
+  {name:'下直腸動脈',pts:'会陽(BL35)'},
+  {name:'下行膝動脈',pts:'血海(SP10)'},
+  {name:'内側足底動脈',pts:'然谷(KI2)'},
+  {name:'内側足根動脈',pts:'公孫(SP4)'},
+  {name:'内陰部動脈',pts:'会陰(CV1)'},
+  {name:'前上歯槽動脈',pts:'齦交(GV28)'},
+  {name:'外側下膝動脈',pts:'犢鼻(ST35)'},
+  {name:'外側大腿回旋動脈(上行枝)殿動脈',pts:'居髎(GB29)'},
+  {name:'底側中足動脈',pts:'湧泉(KI1)'},
+  {name:'母指橈側動脈',pts:'少商(LU11)'},
+  {name:'浅側頭動脈(前頭枝)頭動脈',pts:'承霊(GB18)'},
+  {name:'第1背側中手動脈',pts:'合谷(LI4)'},
+  {name:'第2背側中足動脈',pts:'陥谷(ST43)'},
+  {name:'膝窩動脈',pts:'委中(BL40)'},
+  {name:'鎖骨下動脈',pts:'欠盆(ST12)'},
+  {name:'鼻背動脈',pts:'素髎(GV25)'}
+];
+
+const kpNerveData=[
+  {name:'肋間神経',pts:'不容(ST19)・承満(ST20)・梁門(ST21)・関門(ST22)・太乙(ST23)・滑肉門(ST24)・天枢(ST25)・外陵(ST26)・大巨(ST27)・水道(ST28)・帰来(ST29)・気衝(ST30)・府舎(SP13)・腹結(SP14)・大横(SP15)・腹哀(SP16)・大包(SP21)・横骨(KI11)・大赫(KI12)・気穴(KI13)・四満(KI14)・中注(KI15)・肓兪(KI16)・商曲(KI17)・石関(KI18)・陰都(KI19)・腹通谷(KI20)・幽門(KI21)・歩廊(KI22)・神封(KI23)・霊墟(KI24)・神蔵(KI25)・彧中(KI26)・天池(PC1)・淵腋(GB22)・輒筋(GB23)・京門(GB25)・帯脈(GB26)・五枢(GB27)・維道(GB28)・急脈(LR12)・章門(LR13)'},
+  {name:'副神経',pts:'巨骨(LI16)・天鼎(LI17)・扶突(LI18)・人迎(ST9)・水突(ST10)・気舎(ST11)・秉風(SI12)・曲垣(SI13)・肩外兪(SI14)・肩中兪(SI15)・天窓(SI16)・天容(SI17)・天柱(BL10)・大杼(BL11)・風門(BL12)・肺兪(BL13)・厥陰兪(BL14)・心兪(BL15)・督兪(BL16)・膈兪(BL17)・肝兪(BL18)・附分(BL41)・魄戸(BL42)・膏肓(BL43)・神堂(BL44)・天髎(TE15)・天牖(TE16)・完骨(GB12)・風池(GB20)・肩井(GB21)'},
+  {name:'脛骨神経',pts:'三陰交(SP6)・漏谷(SP7)・地機(SP8)・陰陵泉(SP9)・承扶(BL36)・殷門(BL37)・浮郄(BL38)・委陽(BL39)・合陽(BL55)・承筋(BL56)・承山(BL57)・飛揚(BL58)・跗陽(BL59)・然谷(KI2)・太渓(KI3)・照海(KI6)・復溜(KI7)・交信(KI8)・築賓(KI9)・陰谷(KI10)・風市(GB31)・中瀆(GB32)・膝陽関(GB33)・陽交(GB35)・膝関(LR7)・曲泉(LR8)'},
+  {name:'橈骨神経',pts:'孔最(LU6)・列欠(LU7)・経渠(LU8)・陽渓(LI5)・偏歴(LI6)・温溜(LI7)・下廉(LI8)・上廉(LI9)・手三里(LI10)・曲池(LI11)・肘髎(LI12)・手五里(LI13)・陽谷(SI5)・肩貞(SI9)・陽池(TE4)・外関(TE5)・支溝(TE6)・会宗(TE7)・三陽絡(TE8)・四瀆(TE9)・天井(TE10)・清冷淵(TE11)・消濼(TE12)・臑会(TE13)'},
+  {name:'浅腓骨神経',pts:'解渓(ST41)・衝陽(ST42)・陥谷(ST43)・内庭(ST44)・厲兌(ST45)・隠白(SP1)・大都(SP2)・太白(SP3)・跗陽(BL59)・申脈(BL62)・金門(BL63)・陽陵泉(GB34)・陽交(GB35)・外丘(GB36)・光明(GB37)・陽輔(GB38)・懸鍾(GB39)・丘墟(GB40)・足臨泣(GB41)・地五会(GB42)・侠渓(GB43)・足竅陰(GB44)'},
+  {name:'内側胸筋神経',pts:'中府(LU1)・気戸(ST13)・庫房(ST14)・屋翳(ST15)・膺窓(ST16)・乳中(ST17)・乳根(ST18)・食竇(SP17)・天渓(SP18)・胸郷(SP19)・周栄(SP20)・歩廊(KI22)・神封(KI23)・霊墟(KI24)・神蔵(KI25)・彧中(KI26)・兪府(KI27)・天池(PC1)・日月(GB24)・期門(LR14)'},
+  {name:'外側胸筋神経',pts:'中府(LU1)・気戸(ST13)・庫房(ST14)・屋翳(ST15)・膺窓(ST16)・乳中(ST17)・乳根(ST18)・食竇(SP17)・天渓(SP18)・胸郷(SP19)・周栄(SP20)・歩廊(KI22)・神封(KI23)・霊墟(KI24)・神蔵(KI25)・彧中(KI26)・兪府(KI27)・天池(PC1)・日月(GB24)・期門(LR14)'},
+  {name:'伏在神経',pts:'公孫(SP4)・商丘(SP5)・三陰交(SP6)・漏谷(SP7)・地機(SP8)・陰陵泉(SP9)・太渓(KI3)・大鍾(KI4)・水泉(KI5)・照海(KI6)・復溜(KI7)・交信(KI8)・築賓(KI9)・陰谷(KI10)・中封(LR4)・蠡溝(LR5)・中都(LR6)・膝関(LR7)・曲泉(LR8)'},
+  {name:'鎖骨上神経',pts:'中府(LU1)・雲門(LU2)・肩髃(LI15)・巨骨(LI16)・天鼎(LI17)・扶突(LI18)・気舎(ST11)・欠盆(ST12)・気戸(ST13)・庫房(ST14)・臑兪(SI10)・彧中(KI26)・兪府(KI27)・肩髎(TE14)・天髎(TE15)・肩井(GB21)・華蓋(CV20)・璇璣(CV21)'},
+  {name:'外側前腕皮神経',pts:'尺沢(LU5)・孔最(LU6)・列欠(LU7)・経渠(LU8)・太淵(LU9)・偏歴(LI6)・温溜(LI7)・下廉(LI8)・上廉(LI9)・手三里(LI10)・曲池(LI11)・郄門(PC4)・間使(PC5)・内関(PC6)・大陵(PC7)'},
+  {name:'尺骨神経',pts:'二間(LI2)・三間(LI3)・合谷(LI4)・少海(HT3)・霊道(HT4)・通里(HT5)・陰郄(HT6)・神門(HT7)・少府(HT8)・後渓(SI3)・腕骨(SI4)・支正(SI7)・小海(SI8)・液門(TE2)・中渚(TE3)'},
+  {name:'深腓骨神経',pts:'足三里(ST36)・上巨虚(ST37)・条口(ST38)・下巨虚(ST39)・豊隆(ST40)・解渓(ST41)・衝陽(ST42)・陥谷(ST43)・内庭(ST44)・丘墟(GB40)・大敦(LR1)・行間(LR2)・太衝(LR3)・中封(LR4)'},
+  {name:'内側前腕皮神経',pts:'少海(HT3)・霊道(HT4)・通里(HT5)・陰郄(HT6)・神門(HT7)・養老(SI6)・支正(SI7)・小海(SI8)・曲沢(PC3)・郄門(PC4)・間使(PC5)・内関(PC6)・大陵(PC7)'},
+  {name:'正中神経',pts:'孔最(LU6)・魚際(LU10)・商陽(LI1)・少海(HT3)・霊道(HT4)・通里(HT5)・陰郄(HT6)・神門(HT7)・郄門(PC4)・間使(PC5)・内関(PC6)・大陵(PC7)・労宮(PC8)'},
+  {name:'外側腓腹皮神経',pts:'足三里(ST36)・上巨虚(ST37)・条口(ST38)・下巨虚(ST39)・豊隆(ST40)・飛揚(BL58)・陽陵泉(GB34)・陽交(GB35)・外丘(GB36)・光明(GB37)・陽輔(GB38)・懸鍾(GB39)'},
+  {name:'肩甲背神経',pts:'肩外兪(SI14)・肩中兪(SI15)・大杼(BL11)・風門(BL12)・肺兪(BL13)・厥陰兪(BL14)・心兪(BL15)・附分(BL41)・魄戸(BL42)・膏肓(BL43)・神堂(BL44)・譩譆(BL45)'},
+  {name:'胸背神経',pts:'肝兪(BL18)・胆兪(BL19)・脾兪(BL20)・胃兪(BL21)・膈関(BL46)・魂門(BL47)・陽綱(BL48)・意舎(BL49)・胃倉(BL50)・肓門(BL51)・志室(BL52)・京門(GB25)'},
+  {name:'大腿神経',pts:'髀関(ST31)・伏兎(ST32)・陰市(ST33)・梁丘(ST34)・血海(SP10)・箕門(SP11)・風市(GB31)・中瀆(GB32)・陰包(LR9)・足五里(LR10)・陰廉(LR11)'},
+  {name:'中殿皮神経',pts:'小腸兪(BL27)・膀胱兪(BL28)・中膂兪(BL29)・白環兪(BL30)・上髎(BL31)・次髎(BL32)・中髎(BL33)・下髎(BL34)・胞肓(BL53)・秩辺(BL54)'},
+  {name:'大後頭神経',pts:'絡却(BL8)・玉枕(BL9)・天柱(BL10)・承霊(GB18)・脳空(GB19)・風府(GV16)・脳戸(GV17)・強間(GV18)・後頂(GV19)・百会(GV20)'},
+  {name:'腸骨下腹神経',pts:'衝門(SP12)・府舎(SP13)・腹結(SP14)・大横(SP15)・腹哀(SP16)・京門(GB25)・帯脈(GB26)・五枢(GB27)・維道(GB28)・急脈(LR12)'},
+  {name:'腸骨鼡径神経',pts:'気衝(ST30)・衝門(SP12)・府舎(SP13)・腹結(SP14)・大横(SP15)・腹哀(SP16)・横骨(KI11)・京門(GB25)・急脈(LR12)・曲骨(CV2)'},
+  {name:'下殿神経',pts:'膀胱兪(BL28)・中膂兪(BL29)・白環兪(BL30)・会陽(BL35)・承扶(BL36)・胞肓(BL53)・秩辺(BL54)・環跳(GB30)'},
+  {name:'後前腕皮神経',pts:'肘髎(LI12)・手五里(LI13)・陽池(TE4)・外関(TE5)・支溝(TE6)・会宗(TE7)・三陽絡(TE8)・四瀆(TE9)'},
+  {name:'筋皮神経',pts:'天府(LU3)・侠白(LU4)・尺沢(LU5)・手五里(LI13)・臂臑(LI14)・青霊(HT2)・天泉(PC2)・曲沢(PC3)'},
+  {name:'外側大腿皮神経',pts:'髀関(ST31)・伏兎(ST32)・陰市(ST33)・梁丘(ST34)・風市(GB31)・中瀆(GB32)・膝陽関(GB33)'},
+  {name:'外側足底神経',pts:'陥谷(ST43)・内庭(ST44)・京骨(BL64)・足臨泣(GB41)・地五会(GB42)・侠渓(GB43)・太衝(LR3)'},
+  {name:'小後頭神経',pts:'天牖(TE16)・率谷(GB8)・天衝(GB9)・浮白(GB10)・頭竅陰(GB11)・完骨(GB12)'},
+  {name:'腋窩神経',pts:'臂臑(LI14)・肩髃(LI15)・肩貞(SI9)・臑兪(SI10)・臑会(TE13)・肩髎(TE14)'},
+  {name:'上外側上腕皮神経',pts:'天府(LU3)・侠白(LU4)・臂臑(LI14)・肩貞(SI9)・臑会(TE13)'},
+  {name:'大耳介神経',pts:'頬車(ST6)・天容(SI17)・翳風(TE17)・瘈脈(TE18)・顱息(TE19)'},
+  {name:'後大腿皮神経',pts:'承扶(BL36)・殷門(BL37)・浮郄(BL38)・委陽(BL39)・委中(BL40)'},
+  {name:'総腓骨神経',pts:'浮郄(BL38)・委陽(BL39)・風市(GB31)・中瀆(GB32)・膝陽関(GB33)'},
+  {name:'肩甲上神経',pts:'巨骨(LI16)・臑兪(SI10)・天宗(SI11)・秉風(SI12)・曲垣(SI13)'},
+  {name:'閉鎖神経',pts:'箕門(SP11)・膝関(LR7)・曲泉(LR8)・陰包(LR9)・足五里(LR10)'},
+  {name:'頸横神経',pts:'人迎(ST9)・水突(ST10)・天窓(SI16)・天突(CV22)・廉泉(CV23)'},
+  {name:'上殿皮神経',pts:'胞肓(BL53)・秩辺(BL54)・居髎(GB29)・環跳(GB30)'},
+  {name:'上殿神経',pts:'髀関(ST31)・胞肓(BL53)・秩辺(BL54)・居髎(GB29)'},
+  {name:'内側足底神経',pts:'太白(SP3)・公孫(SP4)・湧泉(KI1)・然谷(KI2)'},
+  {name:'後上腕皮神経',pts:'天井(TE10)・清冷淵(TE11)・消濼(TE12)・臑会(TE13)'},
+  {name:'腸骨下腹神経(前皮枝)腸骨鼡径神経',pts:'気衝(ST30)・横骨(KI11)・急脈(LR12)・曲骨(CV2)'},
+  {name:'陰部大腿神経',pts:'衝門(SP12)・足五里(LR10)・陰廉(LR11)・急脈(LR12)'},
+  {name:'下顎神経',pts:'大迎(ST5)・頬車(ST6)・下関(ST7)'},
+  {name:'内側上腕皮神経',pts:'極泉(HT1)・青霊(HT2)・天泉(PC2)'},
+  {name:'内側腓腹皮神経',pts:'合陽(BL55)・承筋(BL56)・承山(BL57)'},
+  {name:'外側足背皮神経',pts:'申脈(BL62)・金門(BL63)・京骨(BL64)'},
+  {name:'長胸神経',pts:'大包(SP21)・淵腋(GB22)・輒筋(GB23)'},
+  {name:'下外側上腕皮神経',pts:'肘髎(LI12)・手五里(LI13)'},
+  {name:'腓腹神経',pts:'跗陽(BL59)・崑崙(BL60)'},
+  {name:'鎖骨下筋神経',pts:'気戸(ST13)・兪府(KI27)'},
+  {name:'下殿皮神経',pts:'環跳(GB30)'},
+  {name:'下顎神経(三叉神経第3枝)大耳介神経',pts:'頬車(ST6)'},
+  {name:'下顎神経(三叉神経第3枝)小後頭神経',pts:'率谷(GB8)'},
+  {name:'外側上腕皮神経',pts:'天泉(PC2)'},
+  {name:'外側皮枝)腸骨下腹神経',pts:'腹結(SP14)'},
+  {name:'眼神経(三叉神経第1枝)大後頭神経',pts:'承霊(GB18)'},
+  {name:'肋間神経(前皮枝腸骨下腹神経',pts:'腹結(SP14)'},
+  {name:'肋間神経(外側皮枝)上腕皮神経',pts:'極泉(HT1)'},
+  {name:'肩甲下神経',pts:'肩貞(SI9)'},
+  {name:'陰部神経',pts:'会陰(CV1)'},
+  {name:'陰部神経(下直腸神経',pts:'会陰(CV1)'},
+  {name:'顔面神経',pts:'脳戸(GV17)'},
+  {name:'顔面神経(後耳介神経',pts:'角孫(TE20)'}
+];
+
+const kpVeinData=[
+  {name:'内頸静脈',pts:'扶突(LI18)'}
+];
+
+const levelChest={title:'胸腹部の経穴（横並び・前面）',cols:['高さ・横','正中線','0.5寸','2寸','4寸(乳頭線)','5寸','6寸','7寸','中腋窩線8寸'],rows:[
+  ['鎖骨下縁','璇璣(任)','','兪府(腎)','気戸(胃)','','雲門(肺)','',''],
+  ['第1肋間','華蓋(任)','','彧中(腎)','庫房(胃)','','中府(肺)','',''],
+  ['第2肋間','紫宮(任)','','神蔵(腎)','屋翳(胃)','','周栄(脾)','',''],
+  ['第3肋間','玉堂(任)','','霊墟(腎)','膺窓(胃)','','胸郷(脾)','',''],
+  ['第4肋間(乳頭)','膻中(任)','','神封(腎)','乳中(胃)','天池(心包)','天渓(脾)','輒筋(胆)','淵腋(胆)'],
+  ['第5肋間','','','歩廊(腎)','乳根(胃)','','食竇(脾)','',''],
+  ['胸骨体下端','中庭(任)','','','','','','',''],
+  ['上方7寸','鳩尾(任)','','','','','','',''],
+  ['上方6寸','巨闕(任)','幽門(腎)','不容(胃)','期門(肝)','','','','大包(脾)'],
+  ['上方5寸','上脘(任)','腹通谷(腎)','承満(胃)','(日月・胆)','','','',''],
+  ['上方4寸','中脘(任)','陰都(腎)','梁門(胃)','','','','',''],
+  ['上方3寸','建里(任)','石関(腎)','関門(胃)','腹哀(脾)','','','',''],
+  ['上方2寸','下脘(任)','商曲(腎)','太乙(胃)','','','','',''],
+  ['上方1寸','水分(任)','','滑肉門(胃)','','','','',''],
+  ['臍中央','神闕(任)','肓兪(腎)','天枢(胃)','大横(脾)','','','帯脈(胆)',''],
+  ['下方1寸','陰交(任)','中注(腎)','外陵(胃)','','','','',''],
+  ['下方1.5寸','気海(任)','','','腹結(脾)','','','',''],
+  ['下方2寸','石門(任)','四満(腎)','大巨(胃)','','','','',''],
+  ['下方3寸','関元(任)','気穴(腎)','水道(胃)','','','五枢(胆)','',''],
+  ['下方4寸','中極(任)','大赫(腎)','帰来(胃)','府舎(脾)','','','',''],
+  ['恥骨結合上縁','曲骨(任)','横骨(腎)','気衝(胃)','衝門(脾)','','','','']
+]};
+
+const levelBack={title:'背部の経穴（横並び・後面）',cols:['棘突起の高さ','正中線','外方5分','外方1寸5分','外方3寸','外方3寸5分'],rows:[
+  ['C7','大椎(督)','奇)定喘','肩中兪(外方2寸・小腸)','',''],
+  ['Th1','陶道(督)','奇)夾脊','大杼(膀)','肩外兪(小腸)',''],
+  ['Th2','','奇)夾脊','風門(膀)','附分(膀)',''],
+  ['Th3','身柱(督)','奇)夾脊','肺兪(膀)','魄戸(膀)',''],
+  ['Th4','奇)巨闕兪','奇)夾脊','厥陰兪(膀)','膏肓(膀)',''],
+  ['Th5','神道(督)','奇)夾脊','心兪(膀)','神堂(膀)',''],
+  ['Th6','霊台(督)','奇)夾脊','督兪(膀)','譩譆(膀)',''],
+  ['Th7','至陽(督)','奇)夾脊','膈兪(膀)','膈関(膀)',''],
+  ['Th8','','奇)夾脊','','',''],
+  ['Th9','筋縮(督)','奇)夾脊','肝兪(膀)','魂門(膀)',''],
+  ['Th10','中枢(督)','奇)夾脊','胆兪(膀)','陽綱(膀)',''],
+  ['Th11','脊中(督)','奇)夾脊','脾兪(膀)','意舎(膀)',''],
+  ['Th12','奇)接脊','奇)夾脊','胃兪(膀)','胃倉(膀)',''],
+  ['L1','懸枢(督)','奇)夾脊','三焦兪(膀)','肓門(膀)','奇)痞根'],
+  ['L2','命門(督)','奇)夾脊','腎兪(膀)','志室(膀)',''],
+  ['L3','奇)下極兪','奇)夾脊','気海兪(膀)','',''],
+  ['L4','腰陽関(督)','奇)夾脊','大腸兪(膀)','','奇)腰眼'],
+  ['L5','奇)十七椎','奇)夾脊','関元兪(膀)','',''],
+  ['S1(後仙骨孔)','','上髎(膀)','小腸兪(膀)','',''],
+  ['S2(後仙骨孔)','','次髎(膀)','膀胱兪(膀)','胞肓(膀)',''],
+  ['S3(後仙骨孔)','','中髎(膀)','中膂兪(膀)','',''],
+  ['S4(後仙骨孔)','腰兪(督)','下髎(膀)','白環兪(膀)','秩辺(膀)','']
+]};
+
+function renderVesselList(area, data){
+  document.getElementById(area).innerHTML = data.map((v,i)=>
+    `<div class="vessel-item" data-open="0" data-area="${area}" data-i="${i}">
+       <div class="vessel-head"><span class="vname">${v.name}</span><span class="vcount">${v.pts.split('・').filter(Boolean).length}穴 <span class="vq">？</span></span></div>
+       <div class="vessel-pts" style="display:none">${v.pts||'—'}</div>
+     </div>`).join('') || '<p class="hint">データがありません。</p>';
+  document.querySelectorAll(`#${area} .vessel-item`).forEach(it=>{
+    it.onclick=()=>{
+      const open=it.dataset.open==='1';
+      const pe=it.querySelector('.vessel-pts'), q=it.querySelector('.vq');
+      if(open){ it.dataset.open='0'; pe.style.display='none'; q.textContent='？'; }
+      else{ it.dataset.open='1'; pe.style.display='block'; q.textContent='✓'; }
+    };
+  });
+}
+function renderKpArtery(){ renderVesselList('arteryArea', kpArteryData); }
+function renderKpVein(){ renderVesselList('veinArea', kpVeinData); }
+function renderKpNerve(){ renderVesselList('nerveArea', kpNerveData); }
+
+/* ===================== 高さ別 経穴表 ===================== */
+let curLevel='chest';
+function renderLevel(){
+  const t = curLevel==='chest'?levelChest:levelBack;
+  let html=`<div class="level-title">${t.title}</div><div class="level-scroll"><table class="level-tbl"><thead><tr>`;
+  t.cols.forEach((c,ci)=>{ html+=`<th${ci===0?' class="lh"':''}>${c}</th>`; });
+  html+='</tr></thead><tbody>';
+  t.rows.forEach((r,ri)=>{
+    html+='<tr>';
+    r.forEach((cell,ci)=>{
+      if(ci===0){ html+=`<td class="lh">${cell}</td>`; }
+      else if(cell){ html+=`<td class="lcell" data-r="${ri}" data-c="${ci}" data-open="0"><span class="lq">？</span></td>`; }
+      else { html+='<td class="lempty"></td>'; }
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table></div>';
+  document.getElementById('levelArea').innerHTML=html;
+  document.querySelectorAll('#levelArea .lcell').forEach(td=>{
+    td.onclick=()=>{
+      const r=+td.dataset.r,c=+td.dataset.c,open=td.dataset.open==='1';
+      if(open){ td.dataset.open='0'; td.classList.remove('shown'); td.innerHTML='<span class="lq">？</span>'; }
+      else{ td.dataset.open='1'; td.classList.add('shown'); td.textContent=t.rows[r][c]; }
+    };
+  });
+}
+document.querySelectorAll('#levelSwitch button').forEach(b=>{
+  b.onclick=()=>{ document.querySelectorAll('#levelSwitch button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); curLevel=b.dataset.lv; renderLevel(); };
+});
+document.getElementById('levelAll').onclick=()=>{
+  document.querySelectorAll('#levelArea .lcell').forEach(td=>{ if(td.dataset.open!=='1'){ td.click(); } });
+};
+
+
 document.querySelectorAll('nav.tabs button').forEach(b=>{
   b.onclick=()=>{
     document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.remove('active'));
     document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
     b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active');
+    const t=b.dataset.tab;
+    if(t==='t5'&&!document.getElementById('arteryArea').dataset.done){ renderKpArtery(); document.getElementById('arteryArea').dataset.done='1'; }
+    if(t==='t6'&&!document.getElementById('veinArea').dataset.done){ renderKpVein(); document.getElementById('veinArea').dataset.done='1'; }
+    if(t==='t7'&&!document.getElementById('nerveArea').dataset.done){ renderKpNerve(); document.getElementById('nerveArea').dataset.done='1'; }
+    if(t==='t8'&&!document.getElementById('levelArea').dataset.done){ renderLevel(); document.getElementById('levelArea').dataset.done='1'; }
   };
 });
 /* 経穴一覧の表示切替（カード ⇄ 経穴名一覧） */
@@ -2514,78 +3152,8 @@ document.querySelectorAll('#viewToggle button').forEach(b=>{
     document.getElementById('nameList').style.display=isCard?'none':'block';
     document.getElementById('hintCard').style.display=isCard?'block':'none';
     document.getElementById('hintNames').style.display=isCard?'none':'block';
-    if(!isCard){clearKeiketsuSearch();}
   };
 });
-
-/* ===================== 全経穴 横断検索 ===================== */
-/* 全経絡の経穴を1次元配列に展開（経絡名つき） */
-const allPoints=[];
-meridians.forEach((m,mi)=>{m.points.forEach(p=>{allPoints.push({p,mer:m.name,mi});});});
-function normKana(s){
-  // カタカナ→ひらがな、長音・空白除去で「ごうこく/ゴウコク」両対応
-  return (s||'').replace(/[\u30a1-\u30f6]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60))
-    .replace(/[ー・\s　]/g,'').toLowerCase();
-}
-function clearKeiketsuSearch(){
-  const inp=document.getElementById('keiketsuSearch');
-  if(inp)inp.value='';
-  runKeiketsuSearch();
-}
-function runKeiketsuSearch(){
-  const inp=document.getElementById('keiketsuSearch');
-  const q=(inp?inp.value:'').trim();
-  const clearBtn=document.getElementById('keiketsuSearchClear');
-  const pick=document.getElementById('meridianPick');
-  const cardList=document.getElementById('cardList');
-  const resList=document.getElementById('searchResultList');
-  const hintCard=document.getElementById('hintCard');
-  const hintSearch=document.getElementById('hintSearch');
-  const namesOn=document.querySelector('#viewToggle button.on')?.dataset.view==='names';
-  if(!q){
-    // 検索解除：通常表示へ戻す
-    if(clearBtn)clearBtn.style.display='none';
-    resList.style.display='none';resList.innerHTML='';
-    hintSearch.style.display='none';
-    pick.style.display='flex';
-    if(!namesOn){cardList.style.display='flex';hintCard.style.display='block';}
-    return;
-  }
-  if(clearBtn)clearBtn.style.display='inline-block';
-  // 検索中：経絡選択・カード・名前一覧を隠す
-  pick.style.display='none';
-  cardList.style.display='none';hintCard.style.display='none';
-  document.getElementById('nameList').style.display='none';
-  document.getElementById('hintNames').style.display='none';
-  const nq=normKana(q);
-  const codeq=q.toUpperCase().replace(/[\s　]/g,'');
-  const hits=allPoints.filter(({p})=>
-    p.name.includes(q) ||
-    normKana(p.yomi).includes(nq) ||
-    normKana(p.name).includes(nq) ||
-    p.no.toUpperCase().includes(codeq)
-  );
-  resList.style.display='flex';
-  if(hits.length===0){
-    hintSearch.style.display='block';
-    hintSearch.innerHTML=`「${q}」に一致する経穴はありません`;
-    resList.innerHTML='';
-    return;
-  }
-  hintSearch.style.display='block';
-  hintSearch.innerHTML=`<b>${hits.length}</b> 件ヒット　カードを<b>タップ</b>→経穴名→部位・取り方・解剖`;
-  resList.innerHTML=hits.map((h,i)=>
-    `<div class="card has-merlabel" data-stage="0" data-i="${i}"><span class="num">${h.p.no}</span><span class="search-result-mer">${h.mer}</span><div class="inner"><div class="tap0">？ タップして表示</div></div></div>`
-  ).join('');
-  resList.querySelectorAll('.card').forEach(c=>{c.onclick=()=>cycleCard(c,hits[+c.dataset.i].p);});
-}
-(function initKeiketsuSearch(){
-  const inp=document.getElementById('keiketsuSearch');
-  const clearBtn=document.getElementById('keiketsuSearchClear');
-  if(inp)inp.addEventListener('input',runKeiketsuSearch);
-  if(clearBtn)clearBtn.onclick=clearKeiketsuSearch;
-})();
-
 renderMeridianPick();renderCards();renderNameList();renderYoketu();renderMuscles();
 
 /* ===================== 五行色体表 ===================== */
