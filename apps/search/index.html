@@ -215,20 +215,49 @@ footer .ver{opacity:.7}
   background:var(--ink);color:#fff;padding:10px 18px;border-radius:24px;font-size:.85rem;
   opacity:0;transition:.3s;z-index:50;box-shadow:0 6px 20px rgba(0,0,0,.25)}
 #toast.show{transform:translateX(-50%);opacity:1}
+
+/* ===== モード切替タブ ===== */
+.modetab{display:flex;gap:0;margin:0 auto;max-width:760px;padding:14px 16px 0}
+.modetab button{
+  flex:1;font-family:inherit;font-size:.92rem;letter-spacing:.06em;
+  padding:11px 8px;border:1px solid var(--line);background:var(--paper);color:var(--ink-soft);
+  cursor:pointer;transition:.2s;
+}
+.modetab button:first-child{border-radius:10px 0 0 10px}
+.modetab button:last-child{border-radius:0 10px 10px 0;border-left:none}
+.modetab button.on{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+
+/* ===== 逆引きペイン ===== */
+.pane[hidden]{display:none}
+.mer-filter{margin-top:13px;border-top:1px dashed var(--line);padding-top:11px}
+.mer-filter summary{font-size:.84rem;color:var(--accent);cursor:pointer;letter-spacing:.05em}
+.mergrid{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+.merchip{font-family:inherit;font-size:.8rem;padding:5px 11px;border:1px solid var(--line);
+  border-radius:18px;background:#fff;color:var(--ink-soft);cursor:pointer}
+.merchip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.rev-name{font-size:1.32rem;font-weight:600;letter-spacing:.06em}
+.rev-yomi{font-size:.78rem;color:var(--ink-soft);margin-left:2px}
 </style>
 </head>
 <body>
 <header>
   <div class="bar">
     <div class="txt">
-      <div class="ttl"><span class="seal">穴</span>主治症から経穴検索</div>
-      <div class="sub">SYMPTOM &nbsp;→&nbsp; ACUPOINT &nbsp;|&nbsp; 七出典より</div>
+      <div class="ttl"><span class="seal">穴</span><span id="appttl">主治症から経穴検索</span></div>
+      <div class="sub" id="appsub">SYMPTOM &nbsp;→&nbsp; ACUPOINT &nbsp;|&nbsp; 七出典より</div>
     </div>
     <button onclick="window.open('./manual.html','_blank')" style="margin-left:auto;border:1px solid var(--line,#d8cdb6);background:transparent;color:inherit;border-radius:8px;padding:7px 11px;font-size:12px;cursor:pointer;white-space:nowrap">📖 使用説明書</button>
   </div>
 </header>
 
+<div class="modetab" id="modetab">
+  <button data-pane="fwd" class="on">主治症 → 経穴</button>
+  <button data-pane="rev">経穴名 → 主治症</button>
+</div>
+
 <div class="wrap">
+  <!-- ===== 順引き（主治症→経穴）===== -->
+  <div class="pane" id="pane-fwd">
   <div class="search-card">
     <div class="lbl">症状・主治症を入力（複数追加可）</div>
     <div class="inputrow">
@@ -264,7 +293,30 @@ footer .ver{opacity:.7}
   </div>
 
   <div id="results"></div>
-</div>
+  </div><!-- /pane-fwd -->
+
+  <!-- ===== 逆引き（経穴名→主治症）===== -->
+  <div class="pane" id="pane-rev" hidden>
+    <div class="search-card">
+      <div class="lbl">経穴名で検索（漢字・部分一致）</div>
+      <div class="inputrow">
+        <input type="text" id="rq" placeholder="例：合谷、足三里、太衝 …" autocomplete="off">
+        <button class="btn ghost" id="rclear">クリア</button>
+      </div>
+      <details class="mer-filter">
+        <summary>経絡で絞り込む</summary>
+        <div class="mergrid" id="mergrid"></div>
+      </details>
+    </div>
+
+    <div class="summary" id="rsummary" style="display:none">
+      <div class="cnt">該当 <b id="rcnt">0</b> 穴</div>
+      <div class="note" id="rnote"></div>
+    </div>
+
+    <div id="rresults"></div>
+  </div><!-- /pane-rev -->
+</div><!-- /wrap -->
 
 <footer>
   鍼灸経穴データベース ／ 全361経穴・七出典<br>
@@ -276,7 +328,7 @@ footer .ver{opacity:.7}
 <script>
 const SOURCES=["翁鍼灸治療院","駒井一雄","柳谷素霊","岡部素道","代田文誌","深谷伊三郎","首藤傳明"];
 const POPULAR=["頭痛","腰痛","不眠","便秘","下痢","めまい","肩こり","咳嗽","喘息","胃痛","坐骨神経痛","耳鳴り","三叉神経痛","婦人病","リウマチ"];
-let DATA=[], terms=[], mode="and", srcOn=new Set(SOURCES);
+let DATA=[], terms=[], mode="and", srcOn=new Set(["翁鍼灸治療院"]);
 
 const $=s=>document.querySelector(s);
 function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),1800);}
@@ -396,6 +448,78 @@ $("#add").onclick=()=>addTerm($("#q").value);
 $("#q").addEventListener("keydown",e=>{if(e.key==="Enter")addTerm($("#q").value);});
 $("#clear").onclick=()=>{terms=[];renderTerms();run();saveState();};
 
+// ================= 逆引き（経穴名 → 主治症）=================
+let revMer=null;        // 選択中の経絡（nullなら全経絡）
+let revQ="";            // 経穴名検索文字列
+
+function uniqueMeridians(){
+  const seen=new Set(),list=[];
+  for(const p of DATA){ if(p.meridian && !seen.has(p.meridian)){seen.add(p.meridian);list.push(p.meridian);} }
+  return list;
+}
+function renderMer(){
+  const list=uniqueMeridians();
+  $("#mergrid").innerHTML=list.map(m=>
+    `<button class="merchip ${revMer===m?"on":""}" data-m="${esc(m)}">${esc(m)}</button>`).join("");
+  $("#mergrid").querySelectorAll(".merchip").forEach(e=>e.onclick=()=>{
+    revMer = (revMer===e.dataset.m) ? null : e.dataset.m;
+    renderMer(); runRev();
+  });
+}
+function runRev(){
+  const sum=$("#rsummary"),res=$("#rresults");
+  const q=revQ.trim();
+  if(!q && !revMer){sum.style.display="none";res.innerHTML="";return;}
+  const matches=DATA.filter(p=>{
+    if(revMer && p.meridian!==revMer) return false;
+    if(q && !(p.name||"").includes(q)) return false;
+    return true;
+  });
+  // 経穴名の文字数昇順（完全一致を優先的に上へ）
+  matches.sort((a,b)=>{
+    if(q){
+      const ea=a.name===q?0:1, eb=b.name===q?0:1;
+      if(ea!==eb) return ea-eb;
+    }
+    return (a.name||"").length-(b.name||"").length;
+  });
+  sum.style.display="flex";
+  $("#rcnt").textContent=matches.length;
+  $("#rnote").textContent = revMer ? revMer : "全経絡";
+  if(!matches.length){res.innerHTML='<div class="empty"><div class="big">穴</div>該当する経穴が見つかりませんでした</div>';return;}
+  res.innerHTML=matches.map(p=>{
+    const body=Object.entries(p.sources||{}).map(([s,v])=>
+      `<div class="src"><div class="sname">${esc(s)}</div><div class="stext">${hl(v,q?[q]:[])}</div></div>`).join("");
+    return `<div class="card"><div class="head">
+        <span class="rev-name">${hl(p.name||"",q?[q]:[])}</span>
+        <span class="pt-mer" style="margin-left:auto">${esc(p.meridian||"")}</span>
+        <span class="arrow">▶</span>
+      </div>
+      <div class="body">
+        <div class="loc"><b>取穴部位</b>　${esc(p.location||"")}</div>
+        ${body}
+      </div></div>`;
+  }).join("");
+  res.querySelectorAll(".card .head").forEach(h=>h.onclick=()=>h.parentElement.classList.toggle("open"));
+}
+let _rtimer;
+$("#rq").addEventListener("input",e=>{revQ=e.target.value;clearTimeout(_rtimer);_rtimer=setTimeout(runRev,120);});
+$("#rq").addEventListener("keydown",e=>{if(e.key==="Enter"){revQ=e.target.value;runRev();}});
+$("#rclear").onclick=()=>{revQ="";revMer=null;$("#rq").value="";renderMer();runRev();};
+
+// ================= タブ切替 =================
+const TTL={fwd:["主治症から経穴検索","SYMPTOM &nbsp;→&nbsp; ACUPOINT &nbsp;|&nbsp; 七出典より"],
+           rev:["経穴名から主治症検索","ACUPOINT &nbsp;→&nbsp; SYMPTOM &nbsp;|&nbsp; 七出典より"]};
+$("#modetab").querySelectorAll("button").forEach(b=>b.onclick=()=>{
+  const pane=b.dataset.pane;
+  $("#modetab").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));
+  $("#pane-fwd").hidden = pane!=="fwd";
+  $("#pane-rev").hidden = pane!=="rev";
+  $("#appttl").textContent=TTL[pane][0];
+  $("#appsub").innerHTML=TTL[pane][1];
+  if(pane==="rev" && !$("#mergrid").children.length) renderMer();
+});
+
 // 更新ボタン：キャッシュを迂回して最新データを取得・上書き
 const _refreshBtn=$("#refresh");
 if(_refreshBtn) _refreshBtn.onclick=async()=>{
@@ -414,6 +538,7 @@ if(_refreshBtn) _refreshBtn.onclick=async()=>{
   $("#mode").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x.dataset.m===mode));
   await loadData();
   run();
+  renderMer();
 })();
 
 if("serviceWorker" in navigator){
