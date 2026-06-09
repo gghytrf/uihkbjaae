@@ -323,4 +323,18 @@ footer a{color:var(--mid)}
   <p class="prose"><strong>Q. オフラインで使えますか。</strong><br>A. オンライン専用です。起動にはインターネット接続が必要です。</p><p class="prose"><strong>Q. 答えが隠れない／開かない。</strong><br>A. 「？」または答えの部分をもう一度タップしてください。項目ごとに開閉が独立しています。文字を選択した状態になった場合は、一度別の場所をタップしてから操作してください。</p><p class="prose"><strong>Q. バージョンや更新は？</strong><br>A. バージョン表示・更新は統合ホーム側で自動管理されます。手動操作は不要です。</p>
 </div></div>
 <footer>東洋医学 学習スイート ／ <em>暗記</em>アプリ<br>本アプリは個人学習用途を想定しています。再配布・商用利用は禁止されています。</footer>
+<script>
+/* ===== コピー無効化（コンテンツ保護・他と同じ）===== */
+(function(){
+  try{
+    var cpCss=document.createElement('style');
+    cpCss.textContent='html{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;-webkit-touch-callout:none;}';
+    (document.head||document.documentElement).appendChild(cpCss);
+    document.addEventListener('contextmenu',function(e){e.preventDefault();},{capture:true});
+    document.addEventListener('copy',function(e){e.preventDefault();},{capture:true});
+    document.addEventListener('cut',function(e){e.preventDefault();},{capture:true});
+    document.addEventListener('dragstart',function(e){e.preventDefault();},{capture:true});
+  }catch(e){}
+})();
+</script>
 </body></html>

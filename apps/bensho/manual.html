@@ -334,4 +334,18 @@ footer a{color:var(--mid)}
   <p class="prose"><strong>Q. 編集した内容が他の端末に出てこない。</strong><br>A. 編集内容はその端末にのみ保存されます。端末ごとに個別の設定になります。</p><p class="prose"><strong>Q. オフラインで使えますか。</strong><br>A. オンライン専用です。起動にはインターネット接続が必要です（保存済みのカルテ・編集データ自体は端末内に残ります）。</p><p class="prose"><strong>Q. 治療穴やスコア、検査の分岐は信頼できますか。</strong><br>A. これらは学習・臨床補助のための参考値・候補です。標準的な解釈をもとにしていますが、確定的なものではありません。臨床では施術者の判断を優先してください。</p>
 </div></div>
 <footer>東洋医学 学習スイート ／ 東洋医学 <em>弁証</em>支援アプリ<br>本アプリは学習・臨床補助用途です。表示される弁証・治療穴・検査は候補であり、確定診断ではありません。最終判断は施術者が行ってください。</footer>
+<script>
+/* ===== コピー無効化（コンテンツ保護・他と同じ）===== */
+(function(){
+  try{
+    var cpCss=document.createElement('style');
+    cpCss.textContent='html{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;-webkit-touch-callout:none;}';
+    (document.head||document.documentElement).appendChild(cpCss);
+    document.addEventListener('contextmenu',function(e){e.preventDefault();},{capture:true});
+    document.addEventListener('copy',function(e){e.preventDefault();},{capture:true});
+    document.addEventListener('cut',function(e){e.preventDefault();},{capture:true});
+    document.addEventListener('dragstart',function(e){e.preventDefault();},{capture:true});
+  }catch(e){}
+})();
+</script>
 </body></html>

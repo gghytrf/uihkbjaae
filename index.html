@@ -221,19 +221,9 @@
 
   <div class="credit">
     <div class="credit-name">制作者：大阪行岡医療専門学校長柄校　鍼灸科　75期生　藤本</div>
-    <div class="credit-mail">お問い合わせ：<a id="creditMail" href="mailto:__EMAIL_1__">__EMAIL_1__</a></div>
+    <div class="credit-mail">お問い合わせ：<span id="creditMail" class="selectable">kyokigyo★nekosan.uk　(★→@)</span></div>
   </div>
 </main>
-
-<!--
-  ===== 制作者連絡先（非公開・ソース内のみ）=====
-  表示用とは別の連絡先。後で実アドレスに置換してください。
-  contact(hidden): __EMAIL_2__
--->
-<script>
-  /* 非表示の連絡先（画面には出さない）。後で __EMAIL_2__ を実アドレスに置換 */
-  window.__CONTACT_HIDDEN__ = "__EMAIL_2__";
-</script>
 
 <section id="viewer" aria-hidden="true">
   <div class="appbar" id="appbar">
@@ -620,6 +610,9 @@ function importAllData(ev){
   reader.readAsText(file);
 }
 
+/* 非表示の連絡先（画面には出さない・ソース内のみ）。表示用メールとは別。 */
+window.__CONTACT_HIDDEN__ = "fenyo441●f5.si　(●→@)";
+
 // 簡易トースト（ホーム）
 let _homeToastTimer=null;
 function showToastHome(msg){
@@ -645,6 +638,34 @@ function showToastHome(msg){
     }
   }
   verifyOnStart();
+})();
+
+// ===== コピー無効化（コンテンツ保護・他アプリと同じ）=====
+//  テキスト選択・右クリック・長押し・コピーを抑止。
+//  ただし入力欄と、連絡先メール（.selectable）は選択・コピー可能のままにする。
+(function(){
+  try{
+    var cpCss = document.createElement('style');
+    cpCss.textContent =
+      'html{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;' +
+      '-webkit-touch-callout:none;}' +
+      'input,textarea,[contenteditable="true"],[contenteditable=""],.selectable,.selectable *{' +
+      '-webkit-user-select:text !important;-moz-user-select:text !important;' +
+      '-ms-user-select:text !important;user-select:text !important;-webkit-touch-callout:default !important;}';
+    (document.head||document.documentElement).appendChild(cpCss);
+    var allowed = function(t){
+      if(!t) return false;
+      var tag=(t.tagName||'').toLowerCase();
+      if(tag==='input'||tag==='textarea') return true;
+      if(t.isContentEditable) return true;
+      if(t.closest && t.closest('.selectable')) return true; // 連絡先メールは許可
+      return false;
+    };
+    document.addEventListener('contextmenu', function(e){ if(!allowed(e.target)) e.preventDefault(); }, {capture:true});
+    document.addEventListener('copy', function(e){ if(!allowed(e.target)) e.preventDefault(); }, {capture:true});
+    document.addEventListener('cut', function(e){ if(!allowed(e.target)) e.preventDefault(); }, {capture:true});
+    document.addEventListener('dragstart', function(e){ if(!allowed(e.target)) e.preventDefault(); }, {capture:true});
+  }catch(e){}
 })();
 </script>
 </body>

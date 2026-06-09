@@ -319,4 +319,18 @@ footer a{color:var(--mid)}
   <p class="prose"><strong>Q. オフラインで使えますか。</strong><br>A. オンライン専用です。起動にはインターネット接続が必要です。</p><p class="prose"><strong>Q. データは外部に送られますか。</strong><br>A. 学習履歴・カルテなどは端末内に保存され、外部のサーバーには送信されません。バックアップファイルもご自身の端末にダウンロードされるだけです。</p><p class="prose"><strong>Q. スマホでホーム画面に追加すると全画面になりますか。</strong><br>A. PWAとしてインストールして起動すると、できるだけ全画面で表示されます。端末によっては一部の枠が残ることがあります。</p><p class="prose"><strong>Q. 各アプリの詳しい使い方は？</strong><br>A. それぞれのアプリのヘッダーにある「📖 説明書」をご覧ください。</p>
 </div></div>
 <footer>東洋医学 学習スイート ／ 東洋医学 <em>学習スイート</em><br>本スイートは個人学習用途を想定しています。再配布・商用利用は禁止されています。</footer>
+<script>
+/* ===== コピー無効化（コンテンツ保護・他と同じ）===== */
+(function(){
+  try{
+    var cpCss=document.createElement('style');
+    cpCss.textContent='html{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;-webkit-touch-callout:none;}';
+    (document.head||document.documentElement).appendChild(cpCss);
+    document.addEventListener('contextmenu',function(e){e.preventDefault();},{capture:true});
+    document.addEventListener('copy',function(e){e.preventDefault();},{capture:true});
+    document.addEventListener('cut',function(e){e.preventDefault();},{capture:true});
+    document.addEventListener('dragstart',function(e){e.preventDefault();},{capture:true});
+  }catch(e){}
+})();
+</script>
 </body></html>
