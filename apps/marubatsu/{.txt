@@ -1,8 +1,8 @@
 {
  "schemaVersion": "1.0",
  "questionType": "marubatsu",
- "lastUpdated": "2026-06-07",
+ "lastUpdated": "2026-06-14",
  "description": "あん摩マッサージ指圧師・はり師きゅう師国家試験 〇×問題集（四択を分解・第25-34回＋AI）",
- "totalCount": 18560,
+ "totalCount": 13120,
  "questions": 
 }
