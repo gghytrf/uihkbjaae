@@ -1870,7 +1870,7 @@ async function finishExam() {
   showScreen('exam-result', '試験結果', `${examState.examType === 'hari_kyu' ? 'はりきゅう' : 'あマ指'}`);
 }
 
-async function generateExamPaper(questions, examType, source, yearLabel, shuffleChoices, choiceOrders, skipSave) {
+async function generateExamPaper(questions, examType, source, yearLabel, shuffleChoices, choiceOrders, skipSave, createdAt) {
   const typeLabel = examType === 'hari_kyu' ? 'はり師きゅう師' : 'あマ指';
   const titleSuffix = yearLabel || (source === 'year' ? '年度模試' : 'ランダム模試');
 
@@ -1915,8 +1915,8 @@ async function generateExamPaper(questions, examType, source, yearLabel, shuffle
   const pmQs = questions.filter(q => q.section === 'PM');
 
   // 印刷用HTML組み立て
-  const today = new Date();
-  const dateStr = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日 ${String(today.getHours()).padStart(2,'0')}:${String(today.getMinutes()).padStart(2,'0')}`;
+  const _d = createdAt ? new Date(createdAt) : new Date();
+  const dateStr = `${_d.getFullYear()}年${_d.getMonth() + 1}月${_d.getDate()}日 ${String(_d.getHours()).padStart(2,'0')}:${String(_d.getMinutes()).padStart(2,'0')}`;
 
   function renderQuestionRow(q, num, globalIdx) {
     const orderInfo = choiceOrders[globalIdx];
@@ -2005,7 +2005,7 @@ async function generateExamPaper(questions, examType, source, yearLabel, shuffle
 <div class="cover">
   <h1>${typeLabel} 国家試験 模擬試験</h1>
   <div class="subtitle">${titleSuffix}</div>
-  <div class="info">出力日: ${dateStr} / 全 ${questions.length} 問</div>
+  <div class="info">作成日: ${dateStr} / 全 ${questions.length} 問</div>
 </div>
 
 <div class="notice">
@@ -2110,7 +2110,7 @@ async function reprintPaperFromSession() {
     // skipSave=true で新しいセッションを作らずに再表示
     await generateExamPaper(
       questions, session.examType, 'reprint', session.titleSuffix,
-      !!session.shuffleChoices, choiceOrders, true
+      !!session.shuffleChoices, choiceOrders, true, session.createdAt
     );
   } catch (e) {
     console.error('再印刷失敗:', e);
