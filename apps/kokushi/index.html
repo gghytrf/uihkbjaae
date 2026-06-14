@@ -975,7 +975,7 @@ async function loadQuestionData(forceNetwork = false) {
 
 //=========================================================
 const DB_NAME = 'StudyAppDB';
-const DB_VERSION = 3;
+const DB_VERSION = 4; // questions ストア廃止
 let db = null;
 
 function openDB() {
@@ -985,8 +985,9 @@ function openDB() {
     req.onsuccess = () => { db = req.result; resolve(db); };
     req.onupgradeneeded = (e) => {
       const d = e.target.result;
-      if (!d.objectStoreNames.contains('questions')) {
-        d.createObjectStore('questions', { keyPath: 'id' });
+      // 旧バージョンの questions ストアを削除（問題データはデバイスに保存しない）
+      if (d.objectStoreNames.contains('questions')) {
+        d.deleteObjectStore('questions');
       }
       if (!d.objectStoreNames.contains('progress')) {
         d.createObjectStore('progress', { keyPath: 'questionId' });
@@ -1078,29 +1079,16 @@ const state = {
 async function init() {
   await openDB();
 
-  // 更新確認: 前回確認（成功・失敗問わず）から48時間経過時に確認
-  const CHECK_INTERVAL_MS = 48 * 60 * 60 * 1000; // 48時間
-  const lastCheckRec = await dbGet('settings', 'lastUpdateCheckedAt');
-  const now = Date.now();
-  const lastCheck = lastCheckRec ? new Date(lastCheckRec.value).getTime() : 0;
-
-  if (now - lastCheck >= CHECK_INTERVAL_MS) {
-    await performUpdateCheck(false); // サイレント実行（更新なしは表示しない）
-  }
-  // 48時間以内はスキップ
-
-  // IndexedDBからデータを取得（オフライン時もここで問題が取れる）
-  const cachedQuestions = await dbGetAll('questions');
-  if (cachedQuestions.length === 0) {
-    // 初回起動かつ完全オフラインでデータなし
+  // 問題データをネットワークから取得（デバイスには保存しない）
+  const online = await loadQuestionData(false);
+  if (!online || BUNDLED_QUESTIONS.length === 0) {
     document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:sans-serif;color:#2c3e50;">' +
       '<div style="font-size:48px;margin-bottom:16px;">📶</div>' +
-      '<h2 style="margin-bottom:12px;">初回起動にはネット接続が必要です</h2>' +
+      '<h2 style="margin-bottom:12px;">起動にはネット接続が必要です</h2>' +
       '<p style="color:#7a8a99;">Wi-Fi等に接続してから再度お試しください。</p></div>';
     return;
   }
-
-  state.questions = await dbGetAll('questions');
+  state.questions = BUNDLED_QUESTIONS;
 
   // 進捗・メモ・設定読み込み
   const progressList = await dbGetAll('progress');
@@ -2081,10 +2069,8 @@ async function reprintPaperFromSession() {
   const session = paperState.session;
   if (!session) { alert('セッションが見つかりません'); return; }
   try {
-    // 問題本体の参照元：通常は state.questions（IndexedDB由来）。
-    // 念のため BUNDLED_QUESTIONS（ネット取得直後）もフォールバックに使う。
-    const pool = (state.questions && state.questions.length) ? state.questions
-               : (BUNDLED_QUESTIONS && BUNDLED_QUESTIONS.length ? BUNDLED_QUESTIONS : []);
+    // 問題本体の参照元：state.questions（ネット取得済み）
+    const pool = (state.questions && state.questions.length) ? state.questions : [];
     const byId = {};
     pool.forEach(q => { byId[q.id] = q; });
     // セッションの items から、問題本体を ID で引き当てて復元
@@ -2848,30 +2834,19 @@ async function performUpdateCheck(manual = false) {
   // 手動時はネット上の index.html の APP_VERSION も取得（本体更新の検知用）
   const remoteAppVer = manual ? await fetchRemoteAppVersion() : null;
 
-  // 成功・失敗どちらでも lastUpdateCheckedAt を更新（次回48時間後）
+  // 成功・失敗どちらでも lastUpdateCheckedAt を更新
   await dbPut('settings', { key: 'lastUpdateCheckedAt', value: new Date().toISOString() });
 
   if (online) {
-    const savedQVer   = await dbGet('settings', 'questionDataVersion');
-    const qVerOld     = savedQVer   ? savedQVer.value   : null;
-    const qUpdated    = QUESTION_DATA_VERSION && (!qVerOld || compareVersion(QUESTION_DATA_VERSION, qVerOld) > 0);
+    // 問題データは毎回ネットから取得済み（IndexedDB保存なし）
+    // 常に最新の BUNDLED_QUESTIONS を state.questions に反映
+    state.questions = BUNDLED_QUESTIONS;
+    updateHomeStats();
+    const el = document.getElementById('setting-q-version');
+    if (el) el.textContent = '問題データ: ver.' + (QUESTION_DATA_VERSION || '—');
 
     // 本体更新: サーバ上の index.html のバージョンが、いま動いている APP_VERSION より新しいか
     const appUpdated = !!remoteAppVer && compareVersion(remoteAppVer, APP_VERSION) > 0;
-
-    if (qUpdated) {
-      const tx = db.transaction('questions', 'readwrite');
-      tx.objectStore('questions').clear();
-      await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = rej; });
-      for (const q of BUNDLED_QUESTIONS) await dbPut('questions', q);
-      if (QUESTION_DATA_VERSION)
-        await dbPut('settings', { key: 'questionDataVersion', value: QUESTION_DATA_VERSION });
-      state.questions = await dbGetAll('questions');
-      updateHomeStats();
-      // 設定画面のバージョン表示を更新
-      const el = document.getElementById('setting-q-version');
-      if (el) el.textContent = '問題データ: ver.' + (QUESTION_DATA_VERSION || '—');
-    }
 
     // アプリ本体(index.html)に更新がある場合は、最新のHTML/JSを読み込むため
     // 手動実行時はキャッシュを使わず強制リロードする
@@ -2898,9 +2873,7 @@ async function performUpdateCheck(manual = false) {
     // 本体は最新（または更新なし）なので、現行バージョンを記録
     await dbPut('settings', { key: 'appVersion', value: APP_VERSION });
 
-    if (qUpdated) {
-      showToast(`問題データを更新しました（ver.${QUESTION_DATA_VERSION || APP_VERSION}）`);
-    } else if (manual) {
+    if (manual) {
       showToast('最新版です（更新はありません）', 3000);
     }
   } else {
@@ -3969,17 +3942,11 @@ if ('serviceWorker' in navigator) {
     }
   });
 
-  // フォアグラウンド復帰時：前回確認から48時間以上経過していれば、
-  // そのタイミングで問題データの更新を確認する（ホーム側では7MBを取得しない）。
+  // フォアグラウンド復帰時：毎回問題データの更新を確認する。
   document.addEventListener('visibilitychange', async () => {
     if (document.hidden) return;
     try {
-      const CHECK_INTERVAL_MS = 48 * 60 * 60 * 1000;
-      const rec = await dbGet('settings', 'lastUpdateCheckedAt');
-      const last = rec ? new Date(rec.value).getTime() : 0;
-      if (Date.now() - last >= CHECK_INTERVAL_MS) {
-        await performUpdateCheck(false); // サイレント確認（更新があればデータのみ差し替え）
-      }
+      await performUpdateCheck(false); // サイレント確認（更新があればデータのみ差し替え）
     } catch (e) { /* オフライン等はサイレント */ }
   });
 

@@ -418,20 +418,19 @@ async function saveProgress(qid, isCorrect){
   await pgPut(cur);
 }
 
-/* ====== データ読み込み（国試学習アプリと同じ方式）======
-   ・問題データは IndexedDB に保存して再利用（毎回の大きな通信を避ける）。
-   ・初回、または前回確認から48時間経過時のみ、ネットから取得して保存。
-   ・アプリ起動時・フォアグラウンド復帰時に確認する（ホーム側では取得しない）。 */
+/* ====== データ読み込み ======
+   ・問題データはデバイスに保存しない（オンライン専用）。
+   ・起動・フォアグラウンド復帰のたびにネットから取得する。 */
 const MB_DB = 'MarubatsuDB';
-const MB_CHECK_MS = 48 * 60 * 60 * 1000;
 let _mbdb = null;
 
 function mbOpenDB(){
   return new Promise((resolve, reject)=>{
-    const req = indexedDB.open(MB_DB, 2);
+    const req = indexedDB.open(MB_DB, 3); // v3: questions ストア廃止
     req.onupgradeneeded = (e)=>{
       const db = e.target.result;
-      if(!db.objectStoreNames.contains('questions')) db.createObjectStore('questions', { keyPath:'id' });
+      // 旧バージョンの questions ストアを削除（問題データはデバイスに保存しない）
+      if(db.objectStoreNames.contains('questions')) db.deleteObjectStore('questions');
       if(!db.objectStoreNames.contains('meta')) db.createObjectStore('meta', { keyPath:'key' });
       if(!db.objectStoreNames.contains('progress')) db.createObjectStore('progress', { keyPath:'questionId' });
     };
@@ -445,91 +444,40 @@ function mbGetAll(store){
     r.onsuccess=()=>resolve(r.result||[]); r.onerror=()=>reject(r.error);
   });
 }
-function mbGetMeta(key){
-  return new Promise((resolve)=>{
-    const tx=_mbdb.transaction('meta','readonly'); const r=tx.objectStore('meta').get(key);
-    r.onsuccess=()=>resolve(r.result?r.result.value:null); r.onerror=()=>resolve(null);
-  });
-}
-function mbPutMeta(key,value){
-  return new Promise((resolve)=>{
-    const tx=_mbdb.transaction('meta','readwrite'); tx.objectStore('meta').put({key,value});
-    tx.oncomplete=()=>resolve(); tx.onerror=()=>resolve();
-  });
-}
-async function mbStoreQuestions(list){
-  return new Promise((resolve,reject)=>{
-    const tx=_mbdb.transaction('questions','readwrite');
-    const os=tx.objectStore('questions'); os.clear();
-    list.forEach(q=>{ if(q && q.id!=null) os.put(q); });
-    tx.oncomplete=()=>resolve(); tx.onerror=()=>reject(tx.error);
-  });
-}
-// ネットから取得して IndexedDB に保存（成功時 true）
-async function mbFetchAndStore(){
+
+// ネットから問題データを取得（デバイスには保存しない）
+async function mbFetchQuestions(){
   try{
     const res = await fetch('./marubatsu_questions.json?_=' + Date.now(), { cache:'no-store' });
     if(!res.ok) throw new Error('HTTP '+res.status);
     const data = await res.json();
-    const list = data.questions || [];
-    await mbStoreQuestions(list);
-    await mbPutMeta('lastChecked', Date.now());
-    await mbPutMeta('dataVersion', data.lastUpdated || data.schemaVersion || '');
-    ALL = list;
+    ALL = data.questions || [];
     return true;
   }catch(e){ console.warn('問題データ取得スキップ（オフライン等）:', e.message); return false; }
 }
 
 async function loadData(){
-  try{
-    _mbdb = await mbOpenDB();
-    await loadProgressAll();
-    let cached = await mbGetAll('questions');
-    if(cached.length === 0){
-      // 初回：ネットから取得して保存
-      const ok = await mbFetchAndStore();
-      if(!ok){
-        document.querySelector('#home .card').innerHTML =
-          '<div class="empty-state"><div class="big">📶</div>初回はインターネット接続が必要です。<br>接続してから開き直してください。</div>';
-        return;
-      }
-      buildFilters();
-      refreshHome();
-      toast('問題データ読込: ' + ALL.length + '問'); // 通信したときだけ表示
-    }else{
-      ALL = cached;
-      buildFilters();
-      refreshHome();
-      // 48時間経過していれば、バックグラウンドで最新を確認・差し替え（通信時のみトースト）
-      const last = await mbGetMeta('lastChecked') || 0;
-      if(Date.now() - last >= MB_CHECK_MS){
-        mbFetchAndStore().then(ok=>{ if(ok){ buildFilters(); refreshHome(); toast('問題データ読込: ' + ALL.length + '問'); } });
-      }
-    }
-  }catch(e){
-    // IndexedDB が使えない環境では従来どおり都度取得にフォールバック
-    try{
-      const res = await fetch('./marubatsu_questions.json?_=' + Date.now());
-      const data = await res.json();
-      ALL = data.questions || [];
-      buildFilters(); refreshHome();
-      toast('問題データ読込: ' + ALL.length + '問'); // 通信したときだけ表示
-    }catch(e2){
-      document.querySelector('#home .card').innerHTML =
-        '<div class="empty-state"><div class="big">⚠️</div>問題データを読み込めませんでした。<br>インターネット接続を確認してください。</div>';
-      console.error(e2);
-    }
+  _mbdb = await mbOpenDB();
+  await loadProgressAll();
+  const ok = await mbFetchQuestions();
+  if(!ok || ALL.length === 0){
+    document.querySelector('#home .card').innerHTML =
+      '<div class="empty-state"><div class="big">📶</div>インターネット接続が必要です。<br>接続してから開き直してください。</div>';
+    return;
   }
+  buildFilters();
+  refreshHome();
 }
 
-// フォアグラウンド復帰時：48時間以上経過していれば確認（ホーム側では取得しない）
+// フォアグラウンド復帰時：毎回問題データを再取得
 document.addEventListener('visibilitychange', async ()=>{
   if(document.hidden || !_mbdb) return;
   try{
-    const last = await mbGetMeta('lastChecked') || 0;
-    if(Date.now() - last >= MB_CHECK_MS){
-      const ok = await mbFetchAndStore();
-      if(ok){ buildFilters(); refreshHome(); }
+    const ok = await mbFetchQuestions();
+    if(ok){ buildFilters(); refreshHome(); }
+    else{
+      document.querySelector('#home .card').innerHTML =
+        '<div class="empty-state"><div class="big">📶</div>ネット接続が必要です。<br>接続してから開き直してください。</div>';
     }
   }catch(e){}
 });
