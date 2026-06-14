@@ -284,6 +284,21 @@
   .paper-session-card .title { font-weight: 600; color: #e65100; margin-bottom: 4px; }
   .paper-session-card .meta { font-size: 12px; color: #5d4037; }
   .paper-session-card .progress-mini { font-size: 11px; color: #5d4037; margin-top: 4px; }
+
+  /* 選択肢メモボタン (正/誤/?) */
+  .choice-note-wrap { display: flex; gap: 3px; margin-left: 8px; flex-shrink: 0; align-self: center; }
+  .choice-note-btn {
+    width: 28px; height: 28px; border-radius: 6px;
+    border: 1.5px solid #d4dde4; background: white;
+    font-size: 12px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: #9aa8b5; transition: all 0.12s; flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .choice-note-btn:active { transform: scale(0.90); }
+  .choice-note-btn.active-sei  { background: #d4edda; border-color: #28a745; color: #155724; }
+  .choice-note-btn.active-go   { background: #f8d7da; border-color: #dc3545; color: #721c24; }
+  .choice-note-btn.active-hate { background: #fff3cd; border-color: #ffc107; color: #856404; }
 </style>
 </head>
 <body>
@@ -658,8 +673,7 @@
       </div>
 
       <div class="btn-row" id="action-buttons">
-        <button class="btn outline" id="skip-btn" onclick="skipAnswer()" style="flex: 0 0 auto; padding-left: 16px; padding-right: 16px;">分からない</button>
-        <button class="btn" id="submit-btn" onclick="submitAnswer()" style="flex: 1;" disabled>解答する</button>
+        <button class="btn full" id="submit-btn" onclick="submitAnswer()" disabled>解答する</button>
       </div>
 
       <div class="card" id="memo-card" style="display:none; padding: 12px; margin-top: 12px; margin-bottom: 0; background: #fffbf0;">
@@ -1544,6 +1558,7 @@ function startExamMode() {
   examState.choiceOrders = choiceOrders;
   examState.answers = {};
   examState.bookmarks = {};
+  examState.choiceNotes = {}; // 本試験中の選択肢メモ {questionIndex: {origIdx: 'sei'|'go'|'hate'}}
   examState.currentIndex = 0;
   examState.examType = examType;
   examState.recordHistory = recordHistory;
@@ -1663,13 +1678,51 @@ function showExamQuestion() {
   const userAnswer = examState.answers[examState.currentIndex];
   const orderInfo = examState.choiceOrders[examState.currentIndex];
   const order = orderInfo ? orderInfo.order : [0, 1, 2, 3];
+  if (!examState.choiceNotes[examState.currentIndex]) examState.choiceNotes[examState.currentIndex] = {};
+  const examNoteTypes = [
+    { key: 'sei',  label: '正', cls: 'active-sei'  },
+    { key: 'go',   label: '誤', cls: 'active-go'   },
+    { key: 'hate', label: '?',  cls: 'active-hate' }
+  ];
   order.forEach((origIdx, displayPos) => {
     const num = displayPos + 1; // 表示上の番号
     const div = document.createElement('div');
     div.className = 'choice' + (userAnswer === num ? ' selected' : '');
     div.dataset.origIdx = origIdx + 1; // 元の選択肢番号(1始まり)
-    div.innerHTML = `<span class="num">${num}.</span><span>${escapeHtml(q.choices[origIdx])}</span>`;
+    div.innerHTML = `<span class="num">${num}.</span><span style="flex:1;">${escapeHtml(q.choices[origIdx])}</span>`;
     div.onclick = () => examSelectChoice(num);
+    // 選択肢メモボタン
+    const noteWrap = document.createElement('div');
+    noteWrap.className = 'choice-note-wrap';
+    noteWrap.addEventListener('click', e => e.stopPropagation());
+    const noteIdx = examState.currentIndex;
+    examNoteTypes.forEach(nt => {
+      const btn = document.createElement('button');
+      btn.className = 'choice-note-btn';
+      btn.textContent = nt.label;
+      btn.dataset.noteKey = nt.key;
+      const cur = (examState.choiceNotes[noteIdx] || {})[origIdx + 1];
+      if (cur === nt.key) btn.classList.add(nt.cls);
+      btn.onclick = () => {
+        if (!examState.choiceNotes[noteIdx]) examState.choiceNotes[noteIdx] = {};
+        const notes = examState.choiceNotes[noteIdx];
+        if (notes[origIdx + 1] === nt.key) {
+          delete notes[origIdx + 1];
+        } else {
+          notes[origIdx + 1] = nt.key;
+        }
+        noteWrap.querySelectorAll('.choice-note-btn').forEach(b => {
+          examNoteTypes.forEach(t => b.classList.remove(t.cls));
+          const active = (examState.choiceNotes[noteIdx] || {})[origIdx + 1];
+          if (active) {
+            const matched = examNoteTypes.find(t => t.key === active);
+            if (matched && b.dataset.noteKey === active) b.classList.add(matched.cls);
+          }
+        });
+      };
+      noteWrap.appendChild(btn);
+    });
+    div.appendChild(noteWrap);
     choicesDiv.appendChild(div);
   });
 
@@ -2382,6 +2435,13 @@ function reviewExamWrong() {
   // 元の本試験で学習履歴に反映しない設定だった場合(AI作成問題など)、
   // 復習画面でも反映しない
   state.skipProgressSave = (examState.recordHistory === false);
+  // 本試験中の選択肢メモを exam_review 用に引き継ぐ（問題IDをキーに変換）
+  if (!state.choiceNotes) state.choiceNotes = {};
+  examState.questions.forEach((q, idx) => {
+    if (examState.choiceNotes[idx] && Object.keys(examState.choiceNotes[idx]).length > 0) {
+      state.choiceNotes[q.id] = examState.choiceNotes[idx];
+    }
+  });
   showQuestion();
 }
 
@@ -3239,6 +3299,9 @@ function showQuestion() {
   state.currentQuestion = q;
   state.selectedChoice = null;
   state.isAnswered = false;
+  // 問題ごとに選択肢メモをリセット（問題単位で保持）
+  if (!state.choiceNotes) state.choiceNotes = {};
+  if (!state.choiceNotes[q.id]) state.choiceNotes[q.id] = {}; // {choiceOrigIdx: 'sei'|'go'|'hate'}
 
   document.getElementById('progress-info').textContent = `問題 ${state.currentIndex + 1} / ${state.questionQueue.length}`;
 
@@ -3268,8 +3331,45 @@ function showQuestion() {
     const div = document.createElement('div');
     div.className = 'choice';
     div.dataset.origIdx = origIdx + 1; // 1始まり
-    div.innerHTML = `<span class="num">${displayIdx + 1}.</span><span>${escapeHtml(q.choices[origIdx])}</span>`;
+    div.innerHTML = `<span class="num">${displayIdx + 1}.</span><span style="flex:1;">${escapeHtml(q.choices[origIdx])}</span>`;
     div.onclick = () => selectChoice(div, origIdx + 1);
+    // 選択肢メモボタン
+    const noteWrap = document.createElement('div');
+    noteWrap.className = 'choice-note-wrap';
+    noteWrap.addEventListener('click', e => e.stopPropagation()); // 選択肢クリックと分離
+    const noteTypes = [
+      { key: 'sei',  label: '正', cls: 'active-sei'  },
+      { key: 'go',   label: '誤', cls: 'active-go'   },
+      { key: 'hate', label: '?',  cls: 'active-hate' }
+    ];
+    noteTypes.forEach(nt => {
+      const btn = document.createElement('button');
+      btn.className = 'choice-note-btn';
+      btn.textContent = nt.label;
+      btn.dataset.noteKey = nt.key;
+      const cur = (state.choiceNotes[q.id] || {})[origIdx + 1];
+      if (cur === nt.key) btn.classList.add(nt.cls);
+      btn.onclick = () => {
+        const notes = state.choiceNotes[q.id] || {};
+        if (notes[origIdx + 1] === nt.key) {
+          delete notes[origIdx + 1]; // 同じボタンを押したらリセット
+        } else {
+          notes[origIdx + 1] = nt.key;
+        }
+        state.choiceNotes[q.id] = notes;
+        // 同じ選択肢の3ボタンを全更新
+        noteWrap.querySelectorAll('.choice-note-btn').forEach(b => {
+          noteTypes.forEach(t => b.classList.remove(t.cls));
+          const active = (state.choiceNotes[q.id] || {})[origIdx + 1];
+          if (active) {
+            const matched = noteTypes.find(t => t.key === active);
+            if (matched && b.dataset.noteKey === active) b.classList.add(matched.cls);
+          }
+        });
+      };
+      noteWrap.appendChild(btn);
+    });
+    div.appendChild(noteWrap);
     choicesDiv.appendChild(div);
   });
 
