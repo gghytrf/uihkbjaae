@@ -3851,21 +3851,8 @@ function renderYearCheckList(containerId, excludeYears) {
     const label = typeLabels[examType] || examType;
     const groupId = `year-group-${examType}-${containerId}`;
 
-    // 全選択・全解除ボタン
     html += `
-      <div style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 6px;">
-        <div style="font-size:12px;color:#7a8a99;font-weight:700;letter-spacing:1px;">━ ${label}</div>
-        <div style="display:flex;gap:6px;">
-          <button onclick="selectAllYears('${groupId}','${containerId}',true)"
-            style="font-size:11px;padding:3px 10px;border:1px solid #c0504d;border-radius:6px;background:white;color:#c0504d;cursor:pointer;">
-            全除外
-          </button>
-          <button onclick="selectAllYears('${groupId}','${containerId}',false)"
-            style="font-size:11px;padding:3px 10px;border:1px solid #5a8fa8;border-radius:6px;background:white;color:#5a8fa8;cursor:pointer;">
-            全解除
-          </button>
-        </div>
-      </div>
+      <div style="font-size:12px;color:#7a8a99;font-weight:700;letter-spacing:1px;margin:10px 0 6px;">━ ${label}</div>
       <div id="${groupId}" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px;">`;
 
     examYears.forEach(year => {
@@ -3895,31 +3882,6 @@ function onYearExcludeChange(cb, containerId) {
     lbl.style.borderColor = cb.checked ? '#e8a090' : '#d4dde4';
   }
   // 設定に即時保存
-  if (containerId === 'settings-year-list') {
-    const allCbs = document.querySelectorAll('#settings-year-list input[type="checkbox"]');
-    const excludeYears = [];
-    allCbs.forEach(c => { if (c.checked) excludeYears.push(Number(c.dataset.year)); });
-    updateSetting('excludeYears', excludeYears);
-    updateHomeStats();
-  }
-}
-
-// グループ内の全チェックボックスを一括ON/OFF
-function selectAllYears(groupId, containerId, checked) {
-  const group = document.getElementById(groupId);
-  if (!group) return;
-  // まず全チェックボックスのDOM状態とラベル色を一括更新
-  group.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-    cb.checked = checked;
-    const year = cb.dataset.year;
-    const examType = cb.dataset.examtype;
-    const lbl = document.getElementById(`year-label-${examType}-${year}`);
-    if (lbl) {
-      lbl.style.background = checked ? '#fdf0ee' : '#f5f7fa';
-      lbl.style.borderColor = checked ? '#e8a090' : '#d4dde4';
-    }
-  });
-  // 全CB更新後に一度だけ設定保存
   if (containerId === 'settings-year-list') {
     const allCbs = document.querySelectorAll('#settings-year-list input[type="checkbox"]');
     const excludeYears = [];
