@@ -259,7 +259,8 @@
   table.nerve-tbl .ncell.region{text-align:left}
   table.nerve-tbl .ncell.region .nval{text-align:left}
   table.nerve-tbl .ncell.dash{color:var(--gold);opacity:.7}
-  .meridian-pick button{border:1px solid var(--line);background:var(--paper2);padding:7px 14px;border-radius:20px;
+  .meridian-pick{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+  .meridian-pick button{border:1px solid var(--line);background:var(--paper2);padding:7px 14px;border-radius:20px;white-space:nowrap;flex:0 0 auto;
     font-size:12px;font-weight:700;color:var(--indigo);cursor:pointer;transition:.2s;font-family:'Zen Kaku Gothic New'}
   .meridian-pick button.on{background:var(--indigo);color:var(--paper);border-color:var(--indigo)}
   .view-toggle{display:flex;gap:0;margin-bottom:14px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
@@ -2696,7 +2697,7 @@ const muscleCats=[
 let curMeridian=0;
 function renderMeridianPick(){
   const box=document.getElementById('meridianPick');
-  box.innerHTML=meridians.map((m,i)=>`<button class="${i===curMeridian?'on':''}" data-i="${i}">${m.name}</button>`).join('');
+  box.innerHTML=meridians.map((m,i)=>`<button class="${i===curMeridian?'on':''}" data-i="${i}">${m.short||m.name}</button>`).join('');
   box.querySelectorAll('button').forEach(b=>{b.onclick=()=>{curMeridian=+b.dataset.i;renderMeridianPick();renderCards();renderNameList();};});
 }
 function renderCards(){
