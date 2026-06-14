@@ -286,11 +286,11 @@
   .paper-session-card .progress-mini { font-size: 11px; color: #5d4037; margin-top: 4px; }
 
   /* 選択肢メモボタン (正/誤/?) */
-  .choice-note-wrap { display: flex; gap: 3px; margin-left: 8px; flex-shrink: 0; align-self: center; }
+  .choice-note-wrap { display: flex; gap: 4px; margin-left: 10px; flex-shrink: 0; align-self: center; }
   .choice-note-btn {
-    width: 28px; height: 28px; border-radius: 6px;
+    width: 36px; height: 36px; border-radius: 8px;
     border: 1.5px solid #d4dde4; background: white;
-    font-size: 12px; font-weight: 700; cursor: pointer;
+    font-size: 14px; font-weight: 700; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     color: #9aa8b5; transition: all 0.12s; flex-shrink: 0;
     -webkit-tap-highlight-color: transparent;
@@ -1319,15 +1319,8 @@ function buildExamQuestions(examType, allQuestions, yearFilter, excludeMuted = f
     shortages: []
   };
 
-  // 除外年度フィルターを適用（AI作成問題はyearが文字列のため数値変換できない→除外年度対象外）
-  const excludeYears = state.settings.excludeYears || [];
-  let baseQuestions = allQuestions;
-  if (excludeYears.length > 0) {
-    baseQuestions = allQuestions.filter(q => {
-      const yr = Number(q.year);
-      return isNaN(yr) || !excludeYears.includes(yr);
-    });
-  }
+  // 除外年度フィルターを適用（examType別に独立して判定）
+  let baseQuestions = allQuestions.filter(q => !isYearExcluded(q));
 
   // 本試験は本来不適切問題を含まないので、念のため除外
   for (const row of structure.sections) {
@@ -2528,11 +2521,10 @@ function execSearch() {
   const keywords = raw.split(/[\s　]+/).filter(k => k.length > 0).map(k => normalizeText(k));
 
   // 全問題から検索（AI作成問題は除外、除外年度も除く、試験種別フィルターは考慮しない）
-  const excludeYears = state.settings.excludeYears || [];
   const allQ = state.questions.filter(q => {
     const yr = Number(q.year);
-    if (isNaN(yr)) return false;          // AI作成問題（yearが数値以外）は検索対象外
-    return !excludeYears.includes(yr);
+    if (isNaN(yr)) return false; // AI作成問題は検索対象外
+    return !isYearExcluded(q);
   });
 
   // ② 全キーワードがすべてヒットする問題を抽出（AND検索・正規化済みテキストで比較）
@@ -2718,14 +2710,20 @@ async function updatePaperSessionsNotice() {
     }).join('');
 }
 
+// 除外年度判定ヘルパー（examType + year の複合キーで判定）
+function isYearExcluded(q) {
+  const excludeYears = state.settings.excludeYears || [];
+  if (excludeYears.length === 0) return false;
+  const yr = Number(q.year);
+  if (isNaN(yr)) return false; // AI作成問題は対象外
+  return excludeYears.includes(`${q.examType}_${yr}`);
+}
+
 function filterByExamType(questions) {
   // yearが数値以外の問題は本試験モード専用のため、通常モードから除外
   let normalQuestions = questions.filter(q => !isNaN(Number(q.year)));
-  // 除外年度フィルター
-  const excludeYears = state.settings.excludeYears || [];
-  if (excludeYears.length > 0) {
-    normalQuestions = normalQuestions.filter(q => !excludeYears.includes(Number(q.year)));
-  }
+  // 除外年度フィルター（examType別に独立して判定）
+  normalQuestions = normalQuestions.filter(q => !isYearExcluded(q));
   // 出題除外問題を除外（科目別演習で「出題しない問題」を選んだ場合は除外しない）
   if (state.currentMode !== 'subject' || state.currentSubject !== MUTED_SUBJECT) {
     normalQuestions = normalQuestions.filter(q => !isMutedQuestion(q));
@@ -3690,7 +3688,6 @@ function buildQuestionListItem(id, showMemo, showMuted, onClickExtra) {
 }
 
 function goMemoList() {
-  const excludeYears = state.settings.excludeYears || [];
   const masterById = {};
   state.questions.forEach(q => { masterById[q.id] = q; });
 
@@ -3701,8 +3698,7 @@ function goMemoList() {
       const q = masterById[id];
       if (!q) return true; // 問題データ不明は表示しておく
       if (isAiQuestion(q)) return false; // AI作成問題はメモ一覧に表示しない
-      const yr = Number(q.year);
-      return !excludeYears.includes(yr);
+      return !isYearExcluded(q);
     });
 
   const container = document.getElementById('home-memo-list');
@@ -3721,7 +3717,6 @@ function goMutedList() {
 }
 
 function renderMutedList() {
-  const excludeYears = state.settings.excludeYears || [];
   const mutedIds = Object.keys(state.mutedQuestions || {});
   const container = document.getElementById('home-muted-list');
 
@@ -3732,8 +3727,7 @@ function renderMutedList() {
   const visibleIds = mutedIds.filter(id => {
     const q = masterById[id];
     if (!q) return true;
-    const yr = Number(q.year);
-    return isNaN(yr) || !excludeYears.includes(yr);
+    return !isYearExcluded(q);
   });
 
   if (visibleIds.length === 0) {
@@ -3856,7 +3850,8 @@ function renderYearCheckList(containerId, excludeYears) {
       <div id="${groupId}" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px;">`;
 
     examYears.forEach(year => {
-      const checked = excludeYears.includes(year) ? 'checked' : '';
+      const key = `${examType}_${year}`;
+      const checked = excludeYears.includes(key) ? 'checked' : '';
       html += `
         <label style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:${checked ? '#fdf0ee' : '#f5f7fa'};border:1px solid ${checked ? '#e8a090' : '#d4dde4'};border-radius:8px;cursor:pointer;font-size:13px;transition:all 0.15s;" id="year-label-${examType}-${year}">
           <input type="checkbox" ${checked} data-year="${year}" data-examtype="${examType}"
@@ -3881,11 +3876,11 @@ function onYearExcludeChange(cb, containerId) {
     lbl.style.background = cb.checked ? '#fdf0ee' : '#f5f7fa';
     lbl.style.borderColor = cb.checked ? '#e8a090' : '#d4dde4';
   }
-  // 設定に即時保存
+  // 設定に即時保存（examType_year の複合キーで保存）
   if (containerId === 'settings-year-list') {
     const allCbs = document.querySelectorAll('#settings-year-list input[type="checkbox"]');
     const excludeYears = [];
-    allCbs.forEach(c => { if (c.checked) excludeYears.push(Number(c.dataset.year)); });
+    allCbs.forEach(c => { if (c.checked) excludeYears.push(`${c.dataset.examtype}_${c.dataset.year}`); });
     updateSetting('excludeYears', excludeYears);
     updateHomeStats();
   }
