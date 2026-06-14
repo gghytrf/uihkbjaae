@@ -266,6 +266,11 @@
   .view-toggle button{flex:1;border:none;background:var(--paper2);padding:9px 6px;font-size:12px;font-weight:700;
     color:var(--indigo);cursor:pointer;transition:.2s;font-family:'Zen Kaku Gothic New'}
   .view-toggle button.on{background:var(--cinnabar);color:var(--paper)}
+  .keiketsu-search-bar{display:flex;gap:8px;margin-bottom:14px}
+  .search-result-mer{display:inline-block;font-size:calc(9px*var(--fs));color:var(--paper);background:var(--jade);
+    font-weight:700;border-radius:7px;padding:2px 8px;position:absolute;top:14px;right:14px;letter-spacing:.05em;
+    font-family:'Zen Kaku Gothic New';max-width:46%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card.has-merlabel .req-badge{top:38px}
   /* 経穴名一覧（経絡ごとに横並び） */
   .name-row{background:var(--paper2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;
     box-shadow:2px 3px 0 var(--shadow)}
@@ -562,11 +567,17 @@
         <button class="on" data-view="card">カード（部位・取り方・解剖）</button>
         <button data-view="names">経穴名一覧</button>
       </div>
+      <div class="keiketsu-search-bar">
+        <input type="search" id="keiketsuSearch" class="ryaku-search" placeholder="🔍 全経穴を検索（経穴名・よみ・記号　例: 合谷 / ごうこく / LI4）" autocomplete="off">
+        <button class="ryaku-allbtn" id="keiketsuSearchClear" style="display:none">✕ クリア</button>
+      </div>
       <div class="meridian-pick" id="meridianPick"></div>
       <p class="hint" id="hintCard">カードを<b>タップ</b>→経穴名　もう一度<b>タップ</b>→部位・取り方・解剖　再タップで戻る</p>
       <p class="hint" id="hintNames" style="display:none">経絡名の右の<b>？</b>を<b>タップ</b>で経穴名を一斉表示／各経穴名を<b>タップ</b>で個別に開閉</p>
+      <p class="hint" id="hintSearch" style="display:none"></p>
       <div class="list" id="cardList"></div>
       <div id="nameList" style="display:none"></div>
+      <div class="list" id="searchResultList" style="display:none"></div>
     </section>
     <section class="panel" id="t2">
       <p class="hint">セルを<b>タップ</b>→経穴名　もう一度<b>タップ</b>→場所／下部の表は行を<b>タップ</b>で解答</p>
@@ -3179,6 +3190,9 @@ document.querySelectorAll('#viewToggle button').forEach(b=>{
     document.querySelectorAll('#viewToggle button').forEach(x=>x.classList.remove('on'));
     b.classList.add('on');
     const isCard=b.dataset.view==='card';
+    // 検索中はトグルを切り替えても検索結果を維持する
+    const searching=(document.getElementById('keiketsuSearch')?.value||'').trim()!=='';
+    if(searching){ runKeiketsuSearch(); return; }
     document.getElementById('cardList').style.display=isCard?'flex':'none';
     document.getElementById('nameList').style.display=isCard?'none':'block';
     document.getElementById('hintCard').style.display=isCard?'block':'none';
@@ -3186,6 +3200,75 @@ document.querySelectorAll('#viewToggle button').forEach(b=>{
   };
 });
 renderMeridianPick();renderCards();renderNameList();renderYoketu();renderMuscles();
+
+/* ===================== 全経穴 横断検索 ===================== */
+/* 全経絡の経穴を1次元配列に展開（経絡名つき） */
+const allPoints=[];
+meridians.forEach((m,mi)=>{ m.points.forEach(p=>{ allPoints.push({p,mer:m.short||m.name,mi}); }); });
+function normKana(s){
+  // カタカナ→ひらがな、長音・空白除去で「ごうこく/ゴウコク」両対応
+  return (s||'').replace(/[\u30a1-\u30f6]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60))
+    .replace(/[ー・\s　]/g,'').toLowerCase();
+}
+function clearKeiketsuSearch(){
+  const inp=document.getElementById('keiketsuSearch');
+  if(inp)inp.value='';
+  runKeiketsuSearch();
+}
+function runKeiketsuSearch(){
+  const inp=document.getElementById('keiketsuSearch');
+  const q=(inp?inp.value:'').trim();
+  const clearBtn=document.getElementById('keiketsuSearchClear');
+  const pick=document.getElementById('meridianPick');
+  const cardList=document.getElementById('cardList');
+  const resList=document.getElementById('searchResultList');
+  const hintCard=document.getElementById('hintCard');
+  const hintSearch=document.getElementById('hintSearch');
+  const nameList=document.getElementById('nameList');
+  const hintNames=document.getElementById('hintNames');
+  const namesOn=document.querySelector('#viewToggle button.on')?.dataset.view==='names';
+  if(!q){
+    // 検索解除：通常表示へ戻す
+    if(clearBtn)clearBtn.style.display='none';
+    resList.style.display='none';resList.innerHTML='';
+    hintSearch.style.display='none';
+    pick.style.display='flex';
+    if(!namesOn){ cardList.style.display='flex';hintCard.style.display='block'; }
+    else{ nameList.style.display='block';hintNames.style.display='block'; }
+    return;
+  }
+  if(clearBtn)clearBtn.style.display='inline-block';
+  // 検索中：経絡選択・カード・名前一覧を隠す
+  pick.style.display='none';
+  cardList.style.display='none';hintCard.style.display='none';
+  nameList.style.display='none';
+  hintNames.style.display='none';
+  const nq=normKana(q);
+  const hits=allPoints.filter(({p})=>{
+    return (p.name&&p.name.includes(q))
+      || (p.yomi&&normKana(p.yomi).includes(nq))
+      || (p.no&&p.no.toLowerCase().includes(nq));
+  });
+  resList.style.display='flex';
+  if(hits.length===0){
+    hintSearch.style.display='block';
+    hintSearch.innerHTML=`「${q}」に一致する経穴はありません`;
+    resList.innerHTML='';
+    return;
+  }
+  hintSearch.style.display='block';
+  hintSearch.innerHTML=`<b>${hits.length}</b> 件ヒット　カードを<b>タップ</b>→経穴名→部位・取り方・解剖`;
+  resList.innerHTML=hits.map((h,i)=>
+    `<div class="card has-merlabel" data-stage="0" data-i="${i}"><span class="num">${h.p.no}</span><span class="search-result-mer">${h.mer}</span><div class="inner"><div class="tap0">？ タップして表示</div></div></div>`
+  ).join('');
+  resList.querySelectorAll('.card').forEach(c=>{c.onclick=()=>cycleCard(c,hits[+c.dataset.i].p);});
+}
+(function initKeiketsuSearch(){
+  const inp=document.getElementById('keiketsuSearch');
+  const clearBtn=document.getElementById('keiketsuSearchClear');
+  if(inp)inp.addEventListener('input',runKeiketsuSearch);
+  if(clearBtn)clearBtn.onclick=clearKeiketsuSearch;
+})();
 
 /* ===================== 五行色体表 ===================== */
 /* 列は 木・火・土・金・水。東洋医学概論の五行配当表より */
