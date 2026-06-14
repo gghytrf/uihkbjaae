@@ -2435,11 +2435,11 @@ function reviewExamWrong() {
   // 元の本試験で学習履歴に反映しない設定だった場合(AI作成問題など)、
   // 復習画面でも反映しない
   state.skipProgressSave = (examState.recordHistory === false);
-  // 本試験中の選択肢メモを exam_review 用に引き継ぐ（問題IDをキーに変換）
+  // 本試験中の選択肢メモを間違い復習用に引き継ぐ（問題IDをキーに変換）
   if (!state.choiceNotes) state.choiceNotes = {};
   examState.questions.forEach((q, idx) => {
     if (examState.choiceNotes[idx] && Object.keys(examState.choiceNotes[idx]).length > 0) {
-      state.choiceNotes[q.id] = examState.choiceNotes[idx];
+      state.choiceNotes[q.id] = { ...examState.choiceNotes[idx] };
     }
   });
   showQuestion();
@@ -3299,9 +3299,10 @@ function showQuestion() {
   state.currentQuestion = q;
   state.selectedChoice = null;
   state.isAnswered = false;
-  // 問題ごとに選択肢メモをリセット（問題単位で保持）
+  // 選択肢メモ：exam_review（本試験→間違い復習）は本試験中のメモを引き継ぐため保持
+  // それ以外のモードは問題を開くたびにリセット（一回限りのメモ）
   if (!state.choiceNotes) state.choiceNotes = {};
-  if (!state.choiceNotes[q.id]) state.choiceNotes[q.id] = {}; // {choiceOrigIdx: 'sei'|'go'|'hate'}
+  if (state.currentMode !== 'exam_review') state.choiceNotes[q.id] = {};
 
   document.getElementById('progress-info').textContent = `問題 ${state.currentIndex + 1} / ${state.questionQueue.length}`;
 
@@ -3907,10 +3908,25 @@ function onYearExcludeChange(cb, containerId) {
 function selectAllYears(groupId, containerId, checked) {
   const group = document.getElementById(groupId);
   if (!group) return;
+  // まず全チェックボックスのDOM状態とラベル色を一括更新
   group.querySelectorAll('input[type="checkbox"]').forEach(cb => {
     cb.checked = checked;
-    onYearExcludeChange(cb, containerId);
+    const year = cb.dataset.year;
+    const examType = cb.dataset.examtype;
+    const lbl = document.getElementById(`year-label-${examType}-${year}`);
+    if (lbl) {
+      lbl.style.background = checked ? '#fdf0ee' : '#f5f7fa';
+      lbl.style.borderColor = checked ? '#e8a090' : '#d4dde4';
+    }
   });
+  // 全CB更新後に一度だけ設定保存
+  if (containerId === 'settings-year-list') {
+    const allCbs = document.querySelectorAll('#settings-year-list input[type="checkbox"]');
+    const excludeYears = [];
+    allCbs.forEach(c => { if (c.checked) excludeYears.push(Number(c.dataset.year)); });
+    updateSetting('excludeYears', excludeYears);
+    updateHomeStats();
+  }
 }
 
 function renderSettingsYearList() {
